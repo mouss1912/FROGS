@@ -62,7 +62,7 @@ class PICRUSt2(Cmd):# la class Picrust2 herite de la class Cmd # Class picrust2_
         @param stderr: [str] Path to temporary picrust2 stderr output file
         @param thread: [int] number of cpu to use.
         """
-        #
+        # La classe commande n'entre pas dans le programme picrust2
        # print("" + picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
         os.system("/Users/moussa/FROGS_moussa/libexec/place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
         """Cmd.__init__(self,
@@ -95,7 +95,7 @@ def get_fasta_nb_seq( fasta_file ):
 
 
 
-
+#Changement de la fonction parce que non compatible avec l'entré de Picrust2 (reference et espace pas compris par hmalign)
 # Fonction de conversion ddu fichier FASTA
 def convert_fata(fasta_file):
 
@@ -122,7 +122,7 @@ def convert_fata(fasta_file):
         #print(str(ide))
         #print(record.string)
         chaine += ">"+record.id+"\n"+record.string+"\n"
-        # pour écrire la sequence (identifiant, description, et sequence) dans ton fichier de sortie)
+        # pour écrire la sequence (identifiant, description, et sequence) dans le fichier de sortie)
         
         #FH_output.write(record)
     f_out.write(chaine)
