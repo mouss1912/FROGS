@@ -64,13 +64,13 @@ class PICRUSt2(Cmd):# la class Picrust2 herite de la class Cmd # Class picrust2_
         """
         # La classe commande n'entre pas dans le programme picrust2
        # print("" + picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
-        os.system("/Users/moussa/FROGS_moussa/libexec/place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
-        """Cmd.__init__(self,
+       # os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
+        Cmd.__init__(self,
                  'place_seqs.py', #l'executable (place_seq.py) 
                  'place OTUs on tree.', # c'est le descriptif de l'outil (place otu on tree)
                   "" + picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir) +' 2> ' + stdout,
                 "--version") #Ajouter le ref_dir et le min_align (ajoute version argument)
-        """
+        
     def get_version(self): #fonction qui fait appel à Cmd et --version
         """
         @summary: Returns the program version number.
@@ -131,7 +131,7 @@ def convert_fata(fasta_file):
 
 
 
-#Fonction pour picrust2
+#Fonction pour Extraire les cluster non alignés
 
 ##################################################################################################################################################
 #
@@ -167,6 +167,7 @@ if __name__ == "__main__":
     group_output.add_argument('-o', '--out_tree', metavar='PATH', required=True, type=str, help='Name of final output tree.')
 
     group_output.add_argument('--intermediate', metavar='PATH', type=str, default=None, help='Output folder for intermediate files (will be ''deleted otherwise).')
+    group_output.add_argument( '-l', '--log-file', default=sys.stdout, help='This output file will contain several information on executed commands.')
 
     args = parser.parse_args()
     #prevent_shell_injections(args)
@@ -186,7 +187,7 @@ if __name__ == "__main__":
         os.system("pwd")
         #place_seqs.py --study_fasta --min_align  --out_tree --ref_dir --threads
         convert_fata(args.study_fasta)
-        PICRUSt2(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr)
+        PICRUSt2(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr).submit( args.log_file )
         print("Partie 2 ")
     finally:
     	print("Partie Finale ")
