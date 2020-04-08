@@ -3,6 +3,7 @@ import os
 import sys
 import argparse
 import json
+import re
 from numpy import median
 #from cmd import Cmd
 
@@ -30,9 +31,9 @@ else: os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + os.pathsep + LIB_DIR
 #os.environ['PICRUSt2_PATH'] = "" #variable environnement = pour retrouver les variable 
 print("Partie1")
 #Importer les modules picrust2 (J'ai mis mes librairie picrsut2 dans le dossier lib)
-from picrust2.place_seqs import place_seqs_pipeline
+#from picrust2.place_seqs import place_seqs_pipeline
 from picrust2.default import default_ref_dir
-from picrust2.util import make_output_dir, TemporaryDirectory, restricted_float
+from picrust2.util import restricted_float
 
 
 #Ajouter un lien symbolique de place_seq dans libexec (qui )
@@ -64,19 +65,35 @@ class PICRUSt2(Cmd):# la class Picrust2 herite de la class Cmd # Class picrust2_
         """
         # La classe commande n'entre pas dans le programme picrust2
        # print("" + picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
-       # os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
+        os.system("/Users/moussa/FROGS_moussa/libexec/place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
+        """
         Cmd.__init__(self,
                  'place_seqs.py', #l'executable (place_seq.py) 
                  'place OTUs on tree.', # c'est le descriptif de l'outil (place otu on tree)
                   "" + picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir) +' 2> ' + stdout,
                 "--version") #Ajouter le ref_dir et le min_align (ajoute version argument)
-        
+        """
+        """
+
+        print(self.description)
+        print(os.path.basename(self.program))
+        print(self.get_version())
+        """
+
+
+    
     def get_version(self): #fonction qui fait appel à Cmd et --version
         """
         @summary: Returns the program version number.
         @return: [str] Version number if this is possible, otherwise this method return 'unknown'.
         """
+
+        print (Cmd.get_version(self,'stdout'), "jjkjk")
+        print (Cmd.get_version(self,'stdout').split())
+        print(Cmd.get_version(self,'stdout')[1])
         return Cmd.get_version(self, 'stdout').split()[1].strip() # Le strip ça enléve le retour chariot # Le stdout prend l'erreur de la sortie standard)
+
+    
 
 ##################################################################################################################################################
 #
@@ -117,7 +134,7 @@ def convert_fata(fasta_file):
         record.description = ""
         f_out = open(output_fasta, "w")
         # récupération de la séquence
-        print(record.string)
+        ##print(record.string)
         #print(ide)
         #print(str(ide))
         #print(record.string)
@@ -132,6 +149,44 @@ def convert_fata(fasta_file):
 
 
 #Fonction pour Extraire les cluster non alignés
+
+def excluded_sequence(file_tree, file_fasta, out_file):
+
+    """
+    @summary: Returns the excluded sequence.
+    @param fasta_file: [str] Path to the fasta file to process.
+    @param tree_file: [str] Path to the tree file to process.
+    @return: [int] The file of no aligned sequence.
+    """
+    #Lecture du fichier tree
+    file = open(file_tree, "r")
+    line = file.readline()
+    #List of cluster
+    list_cluster = []
+    #Boucle sur le fichier tree
+    #Je splite sur (,) , regex sur le cluster et récupérer le groupe1
+    while line: 
+        for i, v in enumerate(line.split(",")):
+            group = re.search("(Cluster_[0-9]+)", v)
+            if group:
+                ide = group.group(1)
+                list_cluster.append(ide)
+        line = file.readline() #parcourir ligne par ligne
+    file.close()
+
+    file_fasta = open(file_fasta, "r")
+    file_out   = open(out_file, "w")
+
+    line = file_fasta.readline()
+    while line:
+        if line[0] == ">":
+            if line[1:].strip() not in list_cluster:
+                file_out.write(line[1:].strip()+"\n")
+
+        line = file_fasta.readline()
+
+    file_fasta.close()
+    file_out.close()
 
 ##################################################################################################################################################
 #
@@ -167,7 +222,7 @@ if __name__ == "__main__":
     group_output.add_argument('-o', '--out_tree', metavar='PATH', required=True, type=str, help='Name of final output tree.')
 
     group_output.add_argument('--intermediate', metavar='PATH', type=str, default=None, help='Output folder for intermediate files (will be ''deleted otherwise).')
-    group_output.add_argument( '-l', '--log-file', default=sys.stdout, help='This output file will contain several information on executed commands.')
+    #group_output.add_argument( '-l', '--log-file', default=sys.stdout, help='This output file will contain several information on executed commands.')
 
     args = parser.parse_args()
     #prevent_shell_injections(args)
@@ -187,7 +242,10 @@ if __name__ == "__main__":
         os.system("pwd")
         #place_seqs.py --study_fasta --min_align  --out_tree --ref_dir --threads
         convert_fata(args.study_fasta)
-        PICRUSt2(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr).submit( args.log_file )
+        PICRUSt2(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr)
+        print("Partie picrust fini")
+        excluded_sequence(args.out_tree, "sout.fasta", "excluded.tsv")
+        #PICRUSt2(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr).submit( args.log_file )
         print("Partie 2 ")
     finally:
     	print("Partie Finale ")
