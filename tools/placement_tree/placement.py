@@ -1,4 +1,14 @@
+#!/usr/bin/python2.7
 # -*-coding:Utf-8 -*
+__author__ = ' Moussa Samb & Maria Bernard  & Geraldine Pascal INRAE - SIGENAE '
+__copyright__ = 'Copyright (C) 2020 INRAE'
+__license__ = 'GNU General Public License'
+__version__ = '1.0'
+__email__ = 'frogs@inrae.fr'
+__status__ = 'dev'
+
+#Import
+
 import os
 import sys
 import argparse
@@ -7,21 +17,13 @@ import re
 from numpy import median
 #from cmd import Cmd
 
-#sys.path.append("/Users/moussa/galaxy/tools/picrust2-2.3.0-b/scripts")
-#sys.path.append("/Users/moussa/FROGS_moussa/libexec")
-
-
-
-
-
-__license__ = "GPL"
-__version__ = "2.3.0-b"
-
 ################ Ajouter des dossiers dans la variable PATH (libexec),Permet d'éxecuté le script ######################
 # repertoire du chemin absolu
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+print(CURRENT_DIR ,"llllll")
 # PATH: executable
 BIN_DIR = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "libexec"))
+print(BIN_DIR ,"llllll")
 os.environ['PATH'] = BIN_DIR + os.pathsep + os.environ['PATH'] #Permet d'éxécuter (des outils quelques soit l'endroit) #echo $PATH affiche tous les bin
 # PYTHONPATH
 LIB_DIR = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "lib"))
@@ -48,7 +50,7 @@ from frogsBiom import BiomIO
 # COMMAND LINES # place_seqs.py --study_fasta --min_align  --out_tree --ref_dir --threads
 #
 ##################################################################################################################################################
-class PICRUSt2(Cmd):# la class Picrust2 herite de la class Cmd # Class picrust2_place_seq
+class picrust2_place_seqs(Cmd):# la class Picrust2 herite de la class Cmd # Class picrust2_place_seq
     """
     @summary: PICRUSt2 (Phylogenetic Investigation of Communities by Reconstruction of Unobserved States)
     @summary: place_seqs.py program placed Fasta sequence on the tree Arbre .
@@ -65,7 +67,7 @@ class PICRUSt2(Cmd):# la class Picrust2 herite de la class Cmd # Class picrust2_
         """
         # La classe commande n'entre pas dans le programme picrust2
        # print("" + picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
-        os.system("/Users/moussa/FROGS_moussa/libexec/place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
+        os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
         """
         Cmd.__init__(self,
                  'place_seqs.py', #l'executable (place_seq.py) 
@@ -114,7 +116,7 @@ def get_fasta_nb_seq( fasta_file ):
 
 #Changement de la fonction parce que non compatible avec l'entré de Picrust2 (reference et espace pas compris par hmalign)
 # Fonction de conversion ddu fichier FASTA
-def convert_fata(fasta_file):
+def convert_fasta(fasta_file):
 
     input_fasta = fasta_file
     output_fasta = "sout.fasta"
@@ -188,6 +190,15 @@ def excluded_sequence(file_tree, file_fasta, out_file):
     file_fasta.close()
     file_out.close()
 
+#Fonction pour le summary html
+#def write_summary( summary_file, file_fasta, out_tree, file_tree):
+    """
+    @summary: Writes the process summary in one html file.
+    @param summary_file: [str] path to the output html file.
+    @param file_fasta: [str] path to the fasta file of OTU
+    @param out_tree [str] path to the input tree file.
+    @param file_tree: [str] path to the Newick file.
+    """
 ##################################################################################################################################################
 #
 # MAIN
@@ -241,8 +252,8 @@ if __name__ == "__main__":
         print(args)
         os.system("pwd")
         #place_seqs.py --study_fasta --min_align  --out_tree --ref_dir --threads
-        convert_fata(args.study_fasta)
-        PICRUSt2(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr)
+        convert_fasta(args.study_fasta)
+        picrust2_place_seqs(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr)
         print("Partie picrust fini")
         excluded_sequence(args.out_tree, "sout.fasta", "excluded.tsv")
         #PICRUSt2(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr).submit( args.log_file )
