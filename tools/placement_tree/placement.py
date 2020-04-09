@@ -1,4 +1,4 @@
-#!/usr/bin/python2.7
+#!/usr/bin/env python2.7
 # -*-coding:Utf-8 -*
 __author__ = ' Moussa Samb & Maria Bernard  & Geraldine Pascal INRAE - SIGENAE '
 __copyright__ = 'Copyright (C) 2020 INRAE'
@@ -20,10 +20,14 @@ from numpy import median
 ################ Ajouter des dossiers dans la variable PATH (libexec),Permet d'éxecuté le script ######################
 # repertoire du chemin absolu
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-print(CURRENT_DIR ,"llllll")
+
+#~ print(CURRENT_DIR ,"llllll")
+
 # PATH: executable
 BIN_DIR = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "libexec"))
-print(BIN_DIR ,"llllll")
+
+#~ print(BIN_DIR ,"llllll")
+
 os.environ['PATH'] = BIN_DIR + os.pathsep + os.environ['PATH'] #Permet d'éxécuter (des outils quelques soit l'endroit) #echo $PATH affiche tous les bin
 # PYTHONPATH
 LIB_DIR = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "lib"))
@@ -32,10 +36,12 @@ if os.getenv('PYTHONPATH') is None: os.environ['PYTHONPATH'] = LIB_DIR #
 else: os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + os.pathsep + LIB_DIR
 #os.environ['PICRUSt2_PATH'] = "" #variable environnement = pour retrouver les variable 
 print("Partie1")
+
 #Importer les modules picrust2 (J'ai mis mes librairie picrsut2 dans le dossier lib)
 #from picrust2.place_seqs import place_seqs_pipeline
-from picrust2.default import default_ref_dir
-from picrust2.util import restricted_float
+#~ from picrust2.default import #~ from picrust2.default import default_ref_dir
+
+#~ from picrust2.util import restricted_float
 
 
 #Ajouter un lien symbolique de place_seq dans libexec (qui )
@@ -57,7 +63,8 @@ class picrust2_place_seqs(Cmd):# la class Picrust2 herite de la class Cmd # Clas
     @see: https://github.com/picrust/picrust2/wiki
     """
     # methode _init_ = Comme le constructeur de la classe "1er methode à creer", initialise les attributs
-    def __init__(self, picrustMet, study_fasta, out_tree,min_align, ref_dir, stdout):
+    #~ def __init__(self, picrustMet, study_fasta, out_tree,min_align, ref_dir, stdout):
+    def __init__(self, picrustMet, study_fasta, out_tree,min_align, stdout):
         """
         @param mafftMet: [str] picrust2 method option.
         @param fasta: [str] Path to input fasta file.
@@ -67,7 +74,8 @@ class picrust2_place_seqs(Cmd):# la class Picrust2 herite de la class Cmd # Clas
         """
         # La classe commande n'entre pas dans le programme picrust2
        # print("" + picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
-        os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
+        #~ os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
+        os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) )
         """
         Cmd.__init__(self,
                  'place_seqs.py', #l'executable (place_seq.py) 
@@ -216,9 +224,10 @@ if __name__ == "__main__":
 
     group_input.add_argument('-p', '--processes', type=int, default=1, help='Number of processes to run in parallel (default: ''%(default)d). Note that this refers to ''multithreading rather than multiprocessing when ''running EPA-ng and GAPPA.')
 
-    group_input.add_argument('-r', '--ref_dir', metavar='PATH', type=str, default=default_ref_dir, help='Directory containing reference sequence files ''(default: %(default)s). Please see the online ''documentation for how to name the files in this ''directory in order to use custom reference files.')
+    #~ group_input.add_argument('-r', '--ref_dir', metavar='PATH', type=str, default=default_ref_dir, help='Directory containing reference sequence files ''(default: %(default)s). Please see the online ''documentation for how to name the files in this ''directory in order to use custom reference files.')
 
-    group_input.add_argument('--min_align', type=restricted_float, default=0.8, help='Proportion of the total length of an input query ''sequence that must align with reference sequences. ''Any sequences with lengths below this value after ''making an alignment with reference sequences will ''be excluded from the placement and all subsequent ''steps. (default: %(default)d).')
+    #~ group_input.add_argument('--min_align', type=restricted_float, default=0.8, help='Proportion of the total length of an input query ''sequence that must align with reference sequences. ''Any sequences with lengths below this value after ''making an alignment with reference sequences will ''be excluded from the placement and all subsequent ''steps. (default: %(default)d).')
+    group_input.add_argument('--min_align', type=float, default=0.8, help='Proportion of the total length of an input query ''sequence that must align with reference sequences. ''Any sequences with lengths below this value after ''making an alignment with reference sequences will ''be excluded from the placement and all subsequent ''steps. (default: %(default)d).')
 
     group_input.add_argument('--chunk_size', type=int, default=5000, help='Number of query seqs to read in at once for EPA-ng ''(default: %(default)d).')
 
@@ -246,14 +255,15 @@ if __name__ == "__main__":
     picrustMet = ""
     # Process 
     try:     
-        print(default_ref_dir)
-        print(restricted_float)
+        #~ print(default_ref_dir)
+        #~ print(restricted_float)
         print("\n\n\n--------------")
-        print(args)
+        #~ print(args)
         os.system("pwd")
         #place_seqs.py --study_fasta --min_align  --out_tree --ref_dir --threads
         convert_fasta(args.study_fasta)
-        picrust2_place_seqs(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr)
+        #~ picrust2_place_seqs(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr)
+        picrust2_place_seqs(picrustMet, "sout.fasta", args.out_tree, args.min_align, stderr)
         print("Partie picrust fini")
         excluded_sequence(args.out_tree, "sout.fasta", "excluded.tsv")
         #PICRUSt2(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr).submit( args.log_file )
