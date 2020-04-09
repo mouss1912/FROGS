@@ -64,7 +64,7 @@ class picrust2_place_seqs(Cmd):# la class Picrust2 herite de la class Cmd # Clas
     """
     # methode _init_ = Comme le constructeur de la classe "1er methode à creer", initialise les attributs
     #~ def __init__(self, picrustMet, study_fasta, out_tree,min_align, ref_dir, stdout):
-    def __init__(self, picrustMet, study_fasta, out_tree,min_align, stdout):
+    def __init__(self, picrustMet, study_fasta, out_tree,min_align,ref_dir, stdout):
         """
         @param mafftMet: [str] picrust2 method option.
         @param fasta: [str] Path to input fasta file.
@@ -74,8 +74,8 @@ class picrust2_place_seqs(Cmd):# la class Picrust2 herite de la class Cmd # Clas
         """
         # La classe commande n'entre pas dans le programme picrust2
        # print("" + picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
-        #~ os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
-        os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) )
+        os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
+        #os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) )
         """
         Cmd.__init__(self,
                  'place_seqs.py', #l'executable (place_seq.py) 
@@ -84,7 +84,6 @@ class picrust2_place_seqs(Cmd):# la class Picrust2 herite de la class Cmd # Clas
                 "--version") #Ajouter le ref_dir et le min_align (ajoute version argument)
         """
         """
-
         print(self.description)
         print(os.path.basename(self.program))
         print(self.get_version())
@@ -224,7 +223,7 @@ if __name__ == "__main__":
 
     group_input.add_argument('-p', '--processes', type=int, default=1, help='Number of processes to run in parallel (default: ''%(default)d). Note that this refers to ''multithreading rather than multiprocessing when ''running EPA-ng and GAPPA.')
 
-    #~ group_input.add_argument('-r', '--ref_dir', metavar='PATH', type=str, default=default_ref_dir, help='Directory containing reference sequence files ''(default: %(default)s). Please see the online ''documentation for how to name the files in this ''directory in order to use custom reference files.')
+    group_input.add_argument('-r', '--ref_dir', metavar='PATH', type=str, required=True, help='Directory containing reference sequence files ''(default: %(default)s). Please see the online ''documentation for how to name the files in this ''directory in order to use custom reference files.')
 
     #~ group_input.add_argument('--min_align', type=restricted_float, default=0.8, help='Proportion of the total length of an input query ''sequence that must align with reference sequences. ''Any sequences with lengths below this value after ''making an alignment with reference sequences will ''be excluded from the placement and all subsequent ''steps. (default: %(default)d).')
     group_input.add_argument('--min_align', type=float, default=0.8, help='Proportion of the total length of an input query ''sequence that must align with reference sequences. ''Any sequences with lengths below this value after ''making an alignment with reference sequences will ''be excluded from the placement and all subsequent ''steps. (default: %(default)d).')
@@ -233,7 +232,7 @@ if __name__ == "__main__":
 
     group_input.add_argument('--verbose', default=False, action='store_true', help='If specified, print out wrapped commands and other ''details to screen.')
 
-    group_input.add_argument('-v', '--version', default=False, action='version', version="%(prog)s " + __version__)
+    #group_input.add_argument('-v', '--version', default=False, action='version', version="%(prog)s " + __version__)
 
   
     # output
@@ -262,14 +261,12 @@ if __name__ == "__main__":
         os.system("pwd")
         #place_seqs.py --study_fasta --min_align  --out_tree --ref_dir --threads
         convert_fasta(args.study_fasta)
-        #~ picrust2_place_seqs(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr)
-        picrust2_place_seqs(picrustMet, "sout.fasta", args.out_tree, args.min_align, stderr)
+        picrust2_place_seqs(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr)
+        #picrust2_place_seqs(picrustMet, "sout.fasta", args.out_tree, args.min_align, stderr)
         print("Partie picrust fini")
         excluded_sequence(args.out_tree, "sout.fasta", "excluded.tsv")
         #PICRUSt2(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr).submit( args.log_file )
         print("Partie 2 ")
     finally:
-    	print("Partie Finale ")
+        print("Partie Finale ")
         
-
-    
