@@ -14,4 +14,5 @@ else
     rm -r test/*
 fi
 
-python2.7 placement.py -s data/test2.fasta -o test/out5.tree
+python2.7 placement.py -s data/test2.fasta -o test/out5.tree -r data/ref_tree_picrust2/default_files/prokaryotic/pro_ref
+
