@@ -74,21 +74,16 @@ class picrust2_place_seqs(Cmd):# la class Picrust2 herite de la class Cmd # Clas
         """
         # La classe commande n'entre pas dans le programme picrust2
        # print("" + picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
-        os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
+        #os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir))
         #os.system("place_seqs.py "+ picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) )
-        """
+       
         Cmd.__init__(self,
                  'place_seqs.py', #l'executable (place_seq.py) 
                  'place OTUs on tree.', # c'est le descriptif de l'outil (place otu on tree)
                   "" + picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir) +' 2> ' + stdout,
                 "--version") #Ajouter le ref_dir et le min_align (ajoute version argument)
-        """
-        """
-        print(self.description)
-        print(os.path.basename(self.program))
-        print(self.get_version())
-        """
-
+       
+      
 
     
     def get_version(self): #fonction qui fait appel à Cmd et --version
@@ -97,13 +92,22 @@ class picrust2_place_seqs(Cmd):# la class Picrust2 herite de la class Cmd # Clas
         @return: [str] Version number if this is possible, otherwise this method return 'unknown'.
         """
 
-        print (Cmd.get_version(self,'stdout'), "jjkjk")
-        print (Cmd.get_version(self,'stdout').split())
-        print(Cmd.get_version(self,'stdout')[1])
         return Cmd.get_version(self, 'stdout').split()[1].strip() # Le strip ça enléve le retour chariot # Le stdout prend l'erreur de la sortie standard)
 
-    
+    """
+    #Fonction restricted float
+    def restricted_float(in_arg):
+    '''Custom argparse type to force an input float to be between 0 and 1.'''
+    try:
+        in_arg = float(in_arg)
+    except ValueError:
+        raise argparse.ArgumentTypeError(in_arg + " is not a floating-point "
+                                         "literal (i.e. not a proportion)")
 
+    if in_arg < 0.0 or in_arg > 1.0:
+        raise argparse.ArgumentTypeError(in_arg + "is not in range 0.0 - 1.0")
+    return in_arg
+    """
 ##################################################################################################################################################
 #
 # FUNCTIONS
@@ -206,6 +210,97 @@ def excluded_sequence(file_tree, file_fasta, out_file):
     @param out_tree [str] path to the input tree file.
     @param file_tree: [str] path to the Newick file.
     """
+def write_summary( summary_file, fasta_in, align_out, biomfile, treefile ):
+	
+    """
+    @summary: Writes the process summary in one html file.
+    @param summary_file: [str] path to the output html file.
+    @param align_out: [str] path to the fasta file of unaligned OTU
+    @param biomfile: [str] path to the input BIOM file.
+    @param treefile: [str] path to the Newick file.
+    """
+    # to summary OTUs number && abundances number               
+    summary_info = {
+       'otu_kept' : 0,
+       'otu_removed' : 0,
+       'abundance_kept' : 0,
+       'abundance_removed' : 0       
+    }
+    number_otu_all = 0
+    number_abundance_all = 0
+    # to detail removed OTU
+    removed_details_categories =["Taxonomic Information", "Abundance Number", "% with abundance total", "Sequence length"]
+    removed_details_data =[]
+    
+    # to build one metadata for tree view
+    dic_otu={}
+    list_otu_all=list()
+    list_out_tree=[]
+
+    biom=BiomIO.from_json(biomfile)
+    treefile = open(treefile, "r")
+    newick = treefile.read().strip()
+
+    # record nb OTU and abundance
+    for otu in FastaIO(fasta_in):
+        list_otu_all.append(otu.id)
+        number_otu_all +=1
+        number_abundance_all += biom.get_observation_count(otu.id)
+
+    # record details about removed OTU
+    if align_out is not None:
+        for otu in FastaIO(align_out):
+            summary_info['otu_removed'] +=1
+            summary_info['abundance_removed'] += biom.get_observation_count(otu.id)
+            
+            # to built one table of OTUs out of phylogenetic tree
+            taxonomy=""
+            if biom.has_metadata("taxonomy"):
+                taxonomy = ";".join(biom.get_observation_metadata(otu.id)["taxonomy"]) if issubclass(biom.get_observation_metadata(otu.id)["taxonomy"].__class__,list) else str(biom.get_observation_metadata(otu.id)["taxonomy"])
+            elif biom.has_metadata("blast_taxonomy"): 
+                taxonomy = ";".join(biom.get_observation_metadata(otu.id)["blast_taxonomy"]) if issubclass(biom.get_observation_metadata(otu.id)["blast_taxonomy"].__class__,list) else str(biom.get_observation_metadata(otu.id)["blast_taxonomy"])
+            abundance=biom.get_observation_count(otu.id)
+            percent_abundance=abundance*100/(float(number_abundance_all))
+            length=len(otu.string)
+            info={"name": otu.id, "data": [taxonomy, abundance, percent_abundance, length]}
+            removed_details_data.append(info)
+            list_out_tree.append(otu.id)
+
+    # improve tree view by adding taxonomy information
+    list_in_tree=[item for item in list_otu_all if item not in list_out_tree]  
+    for otu in list_in_tree:
+        tax=None
+        if biom.has_metadata("taxonomy"):
+            tax=" ".join(biom.get_observation_metadata(otu)["taxonomy"]) if issubclass(biom.get_observation_metadata(otu)["taxonomy"].__class__, list) else str(biom.get_observation_metadata(otu)["taxonomy"])
+        elif biom.has_metadata("blast_taxonomy"):
+            tax=" ".join(biom.get_observation_metadata(otu)["blast_taxonomy"]) if issubclass(biom.get_observation_metadata(otu)["blast_taxonomy"].__class__, list) else str(biom.get_observation_metadata(otu)["blast_taxonomy"])
+        if tax :
+            newick=newick.replace(otu + ":", otu + " " + tax + ":")
+    
+    # finalize summary
+    summary_info['otu_kept'] = number_otu_all - summary_info['otu_removed']
+    summary_info['abundance_kept'] = number_abundance_all - summary_info['abundance_removed']
+    
+    # Write
+    FH_summary_tpl = open( os.path.join(CURRENT_DIR, "placement_tree.html") )
+    FH_summary_out = open( summary_file, "w" )
+    for line in FH_summary_tpl:
+        if "###HEIGHT###" in line:
+            line = line.replace( "###HEIGHT###", json.dumps(summary_info['otu_kept']*11+166))
+        if "###NEWICK###" in line:
+            line = line.replace( "###NEWICK###", newick)
+        if "##REMOVED_DETAILS_CATEGORIES###" in line:
+            line = line.replace( "###REMOVED_DETAILS_CATEGORIES###", json.dumps(removed_details_categories) )
+        elif "###REMOVED_DETAILS_DATA###" in line:
+            line = line.replace( "###REMOVED_DETAILS_DATA###", json.dumps(removed_details_data) )
+        elif "###SUMMARY###" in line:
+            line = line.replace( "###SUMMARY###", json.dumps(summary_info) )
+        elif '<div id="OTUs-fail" style="display:none;">' in line:
+            if summary_info['otu_removed']!=0:
+                line = line.replace( 'style="display:none;"', '' )
+        FH_summary_out.write(line)
+    FH_summary_out.close()
+    FH_summary_tpl.close()
 ##################################################################################################################################################
 #
 # MAIN
@@ -220,6 +315,8 @@ if __name__ == "__main__":
     group_input = parser.add_argument_group( 'Inputs' )
 
     group_input.add_argument('-s', '--study_fasta', metavar='PATH', required=True,type=str, help='FASTA of unaligned study sequences.')
+    group_input.add_argument('-b', '--biom_file', metavar='PATH', required=True, type=str, help='Biom file.')
+
 
     group_input.add_argument('-p', '--processes', type=int, default=1, help='Number of processes to run in parallel (default: ''%(default)d). Note that this refers to ''multithreading rather than multiprocessing when ''running EPA-ng and GAPPA.')
 
@@ -237,11 +334,12 @@ if __name__ == "__main__":
   
     # output
     group_output = parser.add_argument_group( 'Outputs' )
+    group_output.add_argument('-m','--html', default='summary.html', help="Path to store resulting html file. [Default: %(default)s]" )    
 
     group_output.add_argument('-o', '--out_tree', metavar='PATH', required=True, type=str, help='Name of final output tree.')
 
     group_output.add_argument('--intermediate', metavar='PATH', type=str, default=None, help='Output folder for intermediate files (will be ''deleted otherwise).')
-    #group_output.add_argument( '-l', '--log-file', default=sys.stdout, help='This output file will contain several information on executed commands.')
+    group_output.add_argument( '-l', '--log-file', default=sys.stdout, help='This output file will contain several information on executed commands.')
 
     args = parser.parse_args()
     #prevent_shell_injections(args)
@@ -261,12 +359,26 @@ if __name__ == "__main__":
         os.system("pwd")
         #place_seqs.py --study_fasta --min_align  --out_tree --ref_dir --threads
         convert_fasta(args.study_fasta)
-        picrust2_place_seqs(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr)
+        picrust2_place_seqs(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr).submit( args.log_file )
         #picrust2_place_seqs(picrustMet, "sout.fasta", args.out_tree, args.min_align, stderr)
         print("Partie picrust fini")
         excluded_sequence(args.out_tree, "sout.fasta", "excluded.tsv")
         #PICRUSt2(picrustMet, "sout.fasta", args.out_tree, args.min_align, args.ref_dir, stderr).submit( args.log_file )
         print("Partie 2 ")
+        
+        # rooting tree step
+        #RootTree(fasttree, args.out_tree).submit(args.log_file)
+
+       # write_summary("sorti.html", "sout.fasta", "soutuiui.fasta", args.biom_file, args.out_tree )
+
+        # summarize resultats in HTML output 
+        write_summary( args.html, "sout.fasta", "excluded.tsv", args.biom_file, args.out_tree)
     finally:
         print("Partie Finale ")
+
+
+
+
+
+
         
