@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+__author__ = ' Moussa Samb & Maria Bernard  & Geraldine Pascal INRAE - SIGENAE '
+__copyright__ = 'Copyright (C) 2020 INRAE'
+__license__ = 'GNU General Public License'
+__version__ = '1.0'
+__email__ = 'frogs@inrae.fr'
+__status__ = 'dev'
+-->
+<tool id="FROGS_PICRUSt2_place_seqs" name="FROGS_placement_tree" version= "1.0">
+	<description>phylogenetic placement of reads: HMMER, EPA-NG, GAPPA</description>
+
+	<requirements>
+               
+        
+    </requirements>
+
+    <stdio>
+    		
+    	 <exit_code range="1:" />
+         <exit_code range=":-1" />
+
+	</stdio>
+
+    <command interpreter="python3" detect_errors="aggressive">
+	  $GALAXY_ROOT_DIR/tools/FROGS_moussa/tools/placement_tree/placement.py --study_fasta $fasta_file --out_tree $out_file --ref_dir $input_ref --min_align $min -b $biom_file;
+	</command>
+
+
+	<inputs>
+	         	 <!-- Files -->
+	    <param format="Fasta" name="fasta_file" type="data" label="Fasta file" help="The sequence file to filter (format: fasta)." />
+	    <param format="biom" name="biom_file" type="data" label="Biom file" help="The abundance file to filter (format: BIOM)."/>
+	   			 <!-- Paramemtre-->
+	   	<param name="input_ref" type="select" label="Reference Tree">
+		    <option value="./FROGS_moussa/tools/placement_tree/data/ref_tree_picrust2/default_files/prokaryotic/pro_ref">Procaryote</option>
+		    <option value="./FROGS_moussa/tools/placement_tree/data/ref_tree_picrust2/default_files/fungi/fungi_ITS">Fungi ITS</option>
+		    <option value="./FROGS_moussa/tools/placement_tree/data/ref_tree_picrust2/default_files/fungi/fungi_18S">Fungi 18S</option>
+		</param>
+	 
+		<param name="min" type="float" label="Total length" help="Proportion of the total length of an input query, minimum coverage between input query and sequences of reference tree." value="0.8" min="0" max="1" optional="false" /> 
+	</inputs>
+
+
+	<outputs>
+		<!-- <data format="tree" name="out_file1" /> -->
+		<data format="nhx" name="out_file"/>
+		<!-- <data format="tabular" name="output_excluded" /> -->
+		<data format="html" name="summary.html" />
+
+	</outputs>
+
+
+	 <tests>
+            <test>
+               
+
+
+            </test>
+     </tests>
+
+
+
+     <help>
+PICRUSt: Phylogenetic Investigation of Communities by Reconstruction of Unobserved States
+-----------------------------------------------------------------------------------------
+The PICRUSt project aims to support prediction of the unobserved character states in a community of organisms from phylogenetic information about the organisms in that community. The primary application is to predict gene family abundance (e.g. the metagenome) in environmental DNA samples for which only marker gene (e.g. 16S rRNA gene) data are available. This is an open source, international, collaborative bioinformatics project developed in the Huttenhower, Beiko, Langille, Vega Thurber, Knight and Caporaso labs.
+
+**First Step**
+--------------
+PICRUSt2 enveloppe HMMER pour placer les séquences d'étude dans un alignement de séquences multiples de référence, puis place ces séquences dans la phylogénie de référence avec EPA-NG . Les «séquences d'étude» auxquelles il est fait référence seront les OTU et / ou ASV représentatifs dans le cadre du flux de travail typique. L'outil GAPPA est utilisé pour convertir l'objet .jplace résultant au format newick.
+
+
+For more information please visit:
+----------------------------------
+http://picrust.github.com/
+     	**Contact**
+
+Citation and Contacts:
+
+Repository: https://github.com/geraldinepascal/FROGS
+website: http://frogs.toulouse.inra.fr/
+
+Please cite the **FROGS article**: *Escudie F., et al. Bioinformatics, 2018. FROGS: Find, Rapidly, OTUs with Galaxy Solution.*
+				**PICRUSt2 article**: * Gavin M. Douglas1, Vincent J. Maffei2, Jesse Zaneveld3, Svetlana N. Yurgel4, James R. Brown5, Christopher M. Taylor2, Curtis Huttenhower6, Morgan G. I. Langille1,7,*			
+								
+
+
+
+     </help>
+
+    <citation>
+    	INRAE
+ 	</citation>
+ </tool>
