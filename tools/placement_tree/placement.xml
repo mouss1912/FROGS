@@ -22,8 +22,8 @@ __status__ = 'dev'
 
 	</stdio>
 
-    <command interpreter="python3" detect_errors="aggressive">
-	  $GALAXY_ROOT_DIR/tools/FROGS_moussa/tools/placement_tree/placement.py --study_fasta $fasta_file --out_tree $out_file --ref_dir $input_ref --min_align $min -b $biom_file;
+    <command interpreter="python2" detect_errors="aggressive">
+	  placement.py --study_fasta $fasta_file --out_tree $out_file --ref_dir $input_ref --min_align $min -b $biom_file;
 	</command>
 
 
