@@ -21,8 +21,6 @@ from numpy import median
 # repertoire du chemin absolu
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-#~ print(CURRENT_DIR ,"llllll")
-
 # PATH: executable
 BIN_DIR = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "libexec"))
 
@@ -37,15 +35,8 @@ else: os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + os.pathsep + LIB_DIR
 #os.environ['PICRUSt2_PATH'] = "" #variable environnement = pour retrouver les variable 
 print("Partie1")
 
-#Importer les modules picrust2 (J'ai mis mes librairie picrsut2 dans le dossier lib)
-#from picrust2.place_seqs import place_seqs_pipeline
-#~ from picrust2.default import #~ from picrust2.default import default_ref_dir
-
-#~ from picrust2.util import restricted_float
-
-
-#Ajouter un lien symbolique de place_seq dans libexec (qui )
-#which place_seqs.py
+#Ajouter un lien symbolique de place_seq, gappa, hmalign, epa_ng dans libexec
+#which place_seqs.py :dans l'environement conda activé pour avoir le chemin de l'executable
 
 from frogsUtils import *
 from frogsSequenceIO import * #Pour parser les Sequences(fasta et fastq)
@@ -63,7 +54,6 @@ class picrust2_place_seqs(Cmd):# la class Picrust2 herite de la class Cmd # Clas
     @see: https://github.com/picrust/picrust2/wiki
     """
     # methode _init_ = Comme le constructeur de la classe "1er methode à creer", initialise les attributs
-    #~ def __init__(self, picrustMet, study_fasta, out_tree,min_align, ref_dir, stdout):
     def __init__(self, picrustMet, study_fasta, out_tree,min_align,ref_dir, stdout):
         """
         @param mafftMet: [str] picrust2 method option.
@@ -81,22 +71,30 @@ class picrust2_place_seqs(Cmd):# la class Picrust2 herite de la class Cmd # Clas
                  'place_seqs.py', #l'executable (place_seq.py) 
                  'place OTUs on tree.', # c'est le descriptif de l'outil (place otu on tree)
                   "" + picrustMet  +" --study_fasta "+ str(study_fasta) +" --out_tree "+ str(out_tree) +" --min_align "+ str(min_align) +" --ref_dir "+ str(ref_dir) +' 2> ' + stdout,
-                "--version") #Ajouter le ref_dir et le min_align (ajoute version argument)
+                "--version") 
        
       
 
     
-    def get_version(self): #fonction qui fait appel à Cmd et --version
+    def get_version(self):
         """
         @summary: Returns the program version number.
         @return: [str] Version number if this is possible, otherwise this method return 'unknown'.
         """
+        # Le strip ça enléve le retour chariot # Le stdout prend l'erreur de la sortie standard)
 
-        return Cmd.get_version(self, 'stdout').split()[1].strip() # Le strip ça enléve le retour chariot # Le stdout prend l'erreur de la sortie standard)
+        return Cmd.get_version(self, 'stdout').split()[1].strip()
 
-    """
+    
+
+    
+##################################################################################################################################################
+#
+# FUNCTIONS
+#
+##################################################################################################################################################
     #Fonction restricted float
-    def restricted_float(in_arg):
+def restricted_float(in_arg):
     '''Custom argparse type to force an input float to be between 0 and 1.'''
     try:
         in_arg = float(in_arg)
@@ -107,13 +105,8 @@ class picrust2_place_seqs(Cmd):# la class Picrust2 herite de la class Cmd # Clas
     if in_arg < 0.0 or in_arg > 1.0:
         raise argparse.ArgumentTypeError(in_arg + "is not in range 0.0 - 1.0")
     return in_arg
-    """
-##################################################################################################################################################
-#
-# FUNCTIONS
-#
-##################################################################################################################################################
 
+    
 def get_fasta_nb_seq( fasta_file ):
     """
     @summary: Returns the number of sequences in fasta_file.
@@ -140,21 +133,14 @@ def convert_fasta(fasta_file):
     for record in FH_input:
         # récupération du nnom de la séquence 
         #print(record.id)
-        # tu peux modifier l'identifiant, par exemple en ajoutant Moussa
+        # On peux modifier l'identifiant, par exemple en ajoutant Moussa
         record.id = record.id
         # récupération de la description
-        #print(record.description)
         record.description = ""
         f_out = open(output_fasta, "w")
         # récupération de la séquence
-        ##print(record.string)
-        #print(ide)
-        #print(str(ide))
-        #print(record.string)
         chaine += ">"+record.id+"\n"+record.string+"\n"
         # pour écrire la sequence (identifiant, description, et sequence) dans le fichier de sortie)
-        
-        #FH_output.write(record)
     f_out.write(chaine)
     f_out.close()
     
@@ -178,13 +164,14 @@ def excluded_sequence(file_tree, file_fasta, out_file):
     list_cluster = []
     #Boucle sur le fichier tree
     #Je splite sur (,) , regex sur le cluster et récupérer le groupe1
+    #Je parcour ligne par ligne
     while line: 
         for i, v in enumerate(line.split(",")):
             group = re.search("(Cluster_[0-9]+)", v)
             if group:
                 ide = group.group(1)
                 list_cluster.append(ide)
-        line = file.readline() #parcourir ligne par ligne
+        line = file.readline() 
     file.close()
 
     file_fasta = open(file_fasta, "r")
@@ -201,15 +188,6 @@ def excluded_sequence(file_tree, file_fasta, out_file):
     file_fasta.close()
     file_out.close()
 
-#Fonction pour le summary html
-#def write_summary( summary_file, file_fasta, out_tree, file_tree):
-    """
-    @summary: Writes the process summary in one html file.
-    @param summary_file: [str] path to the output html file.
-    @param file_fasta: [str] path to the fasta file of OTU
-    @param out_tree [str] path to the input tree file.
-    @param file_tree: [str] path to the Newick file.
-    """
 def write_summary( summary_file, fasta_in, align_out, biomfile, treefile ):
 	
     """
@@ -315,21 +293,20 @@ if __name__ == "__main__":
     group_input = parser.add_argument_group( 'Inputs' )
 
     group_input.add_argument('-s', '--study_fasta', metavar='PATH', required=True,type=str, help='FASTA of unaligned study sequences.')
-    group_input.add_argument('-b', '--biom_file', metavar='PATH', required=True, type=str, help='Biom file.')
 
+    group_input.add_argument('-b', '--biom_file', metavar='PATH', required=True, type=str, help='Biom file.')
 
     group_input.add_argument('-p', '--processes', type=int, default=1, help='Number of processes to run in parallel (default: ''%(default)d). Note that this refers to ''multithreading rather than multiprocessing when ''running EPA-ng and GAPPA.')
 
     group_input.add_argument('-r', '--ref_dir', metavar='PATH', type=str, required=True, help='Directory containing reference sequence files ''(default: %(default)s). Please see the online ''documentation for how to name the files in this ''directory in order to use custom reference files.')
 
-    #~ group_input.add_argument('--min_align', type=restricted_float, default=0.8, help='Proportion of the total length of an input query ''sequence that must align with reference sequences. ''Any sequences with lengths below this value after ''making an alignment with reference sequences will ''be excluded from the placement and all subsequent ''steps. (default: %(default)d).')
-    group_input.add_argument('--min_align', type=float, default=0.8, help='Proportion of the total length of an input query ''sequence that must align with reference sequences. ''Any sequences with lengths below this value after ''making an alignment with reference sequences will ''be excluded from the placement and all subsequent ''steps. (default: %(default)d).')
+    group_input.add_argument('--min_align', type=restricted_float, default=0.8, help='Proportion of the total length of an input query ''sequence that must align with reference sequences. ''Any sequences with lengths below this value after ''making an alignment with reference sequences will ''be excluded from the placement and all subsequent ''steps. (default: %(default)d).')
 
     group_input.add_argument('--chunk_size', type=int, default=5000, help='Number of query seqs to read in at once for EPA-ng ''(default: %(default)d).')
 
     group_input.add_argument('--verbose', default=False, action='store_true', help='If specified, print out wrapped commands and other ''details to screen.')
 
-    #group_input.add_argument('-v', '--version', default=False, action='version', version="%(prog)s " + __version__)
+    group_input.add_argument('-v', '--version', default=False, action='version', version="%(prog)s " + __version__)
 
   
     # output
@@ -342,18 +319,13 @@ if __name__ == "__main__":
     group_output.add_argument( '-l', '--log-file', default=sys.stdout, help='This output file will contain several information on executed commands.')
 
     args = parser.parse_args()
-    #prevent_shell_injections(args)
 
-     ### Temporary files
-    # alignment temporary files
-    #Pas bon pas " code programme doit fonctiooné partout"
     stderr = "picrust2.stderr"
 
     picrustMet = ""
     # Process 
     try:     
-        #~ print(default_ref_dir)
-        #~ print(restricted_float)
+        #~ lancement des commandes
         print("\n\n\n--------------")
         #~ print(args)
         os.system("pwd")
