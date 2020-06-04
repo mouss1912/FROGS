@@ -22,7 +22,7 @@ __status__ = 'dev'
 	
 
     <command >
-	  $GALAXY_ROOT_DIR/tools/FROGS_moussa/app/placement.py --study_fasta $fasta_file --out_tree $out_file --ref_dir $input_ref --min_align $min -b $biom_file;
+	  $GALAXY_ROOT_DIR/tools/FROGS_moussa/app/gene_placement.py -c $categorie -i $table -t $tree_file -o $output -b $biom_file;
 	</command> 
 
 
@@ -30,26 +30,38 @@ __status__ = 'dev'
 	         	 <!-- Files -->
 	    <!-- <param format="Fasta" name="fasta_file" type="data" label="Fasta file" help="The sequence file to filter (format: fasta)." /> -->
 
-	    <param format="Fasta" name="fasta_file" type="data" label="Fasta file" help="The sequence file to filter (format: fasta)."
+	    <param format="nhx" name="tree_file" type="data" label="Tree file" help="The tree file of OTU (format: newick)."
 	    	optional="false">
         	<validator type="empty_field" message="This parameter is required." />
         </param>
 
-         <param format="biom1" name="biom_file" type="data" label="Biom file" help="The abundance table of OTUs (format: biom)." optional="false">
+        <param format="biom1" name="biom_file" type="data" label="Biom file" help="The abundance table of OTUs (format: biom)." optional="false">
         	<validator type="empty_field" message="This parameter is required." />
         </param>
 
-	    <!-- <param format="biom1" name="biom_file" type="data" label="Biom file" help="The abundance file to filter (format: BIOM)."/> -->
-
-
 	   			 <!-- Paramemtre-->
-	   	<param name="input_ref" type="select" label="Reference Tree">
-		    <option value="/Users/moussa/galaxy/tools/FROGS_moussa/tools/placement_tree/data/ref_tree_picrust2/default_files/prokaryotic/pro_ref">Procaryote</option>
-		    <option value="/Users/moussa/galaxy/tools/FROGS_moussa/tools/placement_tree/data/ref_tree_picrust2/default_files/fungi/fungi_ITS">Fungi_ITS</option>
-		    <option value="/Users/moussa/galaxy/tools/FROGS_moussa/tools/placement_tree/data/ref_tree_picrust2/default_files/fungi/fungi_18S">Fungi_18S</option>
+	   	<param name="categorie" type="select" label="Categorie">
+		    <option value="16S">Procaryote_16S</option>
+		    <option value="ITS">Fungi_ITS</option>
+		    <option value="18S">Fungi_18S</option>
 		</param>
-	 
-		<param name="min" type="float" label="Total length" help="Proportion of the total length of an input query, minimum coverage between input query and sequences of reference tree." value="0.8" min="0" max="1" optional="false" /> 
+
+		<!-- <param name="table" type="select" label="Reference Table">
+		    <option value="16S">16S_Count</option>
+		    <option value="EC">EC</option>
+		    <option value="KO">KO</option>
+		</param> -->
+
+		<param name="table" type="select" label="Reference Table" multiple="true" display="checkboxes">
+             <option value="16S">16S_Count</option>
+             <option value="EC">EC</option>
+             <option value="KO">KO</option>
+             <option value="PFAM">PFAM</option>
+             <option value="COG">COG</option>
+             <option value="TIGRFAM">TIGRFAM</option>
+             <option value="PHENO">PHENO</option>
+        </param>
+
 	</inputs>
 
 
@@ -59,28 +71,18 @@ __status__ = 'dev'
 		<!-- <data format="tabular" name="output_excluded" />  -->
 		<!-- <data format="html" name="summary.html" /> -->
 		<data format="html" name="html" label="${tool.name}: summary.html" from_work_dir="summary.html"/>
-		<data format="nhx" name="out_file" label="${tool.name}: tree.nwk" from_work_dir="tree.nwk"/>
+		<data format="tabular" name="output" label="${tool.name}: OTU_Count.tsv" from_work_dir="OTU_Count.tsv"/> 
+
+		  
+   <!--  <data format="tabular" name="output">
+        <actions>
+            <action name="output" type="metadata" default="Firstname,Lastname,Age" />
+        </actions>
+    </data> -->
+
 
 	</outputs>
 
-
-	<tests>
-		<test>
-			<param name="fasta_file" value="references/04-filters.fasta"/>
-			<param name="biom_file"  value="references/06-affiliation.biom"/>
-			<!--output name="out_tree" value="references/13-tree-mafft.nwk"/-->
-			<!--output name="html" value="references/13-tree-mafft.html"/-->
-			<output name="html">
- 		        	<assert_contents>
-                    		<has_text_matching expression="FROGS\sTree" />
-                    		<has_text_matching expression="abundance_removed.*:\s0" />
-                    		<has_text_matching expression="abundance_kept.*:\s45574" />
-                    		<has_text_matching expression="otu_removed.*:\s0" />
-                    		<has_text_matching expression="otu_kept.*:\s86" />
-                	</assert_contents>
-			</output>
-		</test>
-	</tests>
 
 
      <help>
@@ -93,8 +95,8 @@ __status__ = 'dev'
 What it does
 
 Prediction of functional abundances based solely on the sequences of marker genes with 'PICRUSt2 &lt;https://github.com/picrust/picrust2&gt;`_. 
-The first step of Picrust2 consists in placing the nucleotide sequences of the OTUs constructed elsewhere in a reference phylogenetic tree. 
-The phylogenetic placement is done with `HMMER &lt;http://hmmer.org&gt;`_ to place study sequences into a reference multiple-sequence alignment  `EPA_NG &lt;https://github.com/Pbdas/epa-ng#build-instructions&gt;`_ to places these sequences into the reference phylogeny and product finaly tree with `GAPPA &lt;https://github.com/lczech/gappa&gt;`_.
+The second step of Picrust2 consists to predict the family genes of each OTUs constructed elsewhere in a reference phylogenetic tree. 
+Give a NST for each OTU with `castor-R &lt;https://cran.r-project.org/web/packages/castor/index.html&gt;``_.
 
 
 .. class:: infomark page-header h2
@@ -106,26 +108,36 @@ Inputs/Outputs
 Input
 
 
-**OTUs fasta file**:
-
-The OTUs sequence file (format `FASTA &lt;https://en.wikipedia.org/wiki/FASTA_format&gt;`_).
-
-.. image:: static/images/frogs_images/frogs_tree_otufile.png
-
-**OTUs biom file**:
-
-The OTUs biom file (format `biom1 &lt;http://biom-format.org/documentation/format_versions/biom-1.0.html&gt;`_).
-This file can be obtained in particular with the FROGS pipeline.
-
-.. class:: h3
-
-Outputs
+**OTUs tree**:
 
 **Newick file** (tree.nwk):
 
 The phylogenetic tree in Newick format (format `nxh &lt;https://en.wikipedia.org/wiki/Newick_format&gt;`_).
 
  .. image:: static/images/frogs_images/nwk_treefile.png
+
+**OTUs biom file**:
+
+The OTUs biom file (format `biom1 &lt;http://biom-format.org/documentation/format_versions/biom-1.0.html&gt;`_).
+This file can be obtained in particular with the FROGS pipeline.
+
+
+**Table of prediction **:
+
+Which default pre-calculated count table to use (one of '16S', 'COG', 'EC', 'KO', 'PFAM', 'TIGRFAM', 'PHENO')
+
+.. class:: h3
+
+Outputs
+
+**Prediction result ** (out.tsv):
+
+ 
+The table with abundances each cluster in each sample and NSTI for each cluster (format TSV).
+
+Authorised column names :  sequence_OTU, prediction_Count_OTU, NST
+
+
 
 **Html file** (summary.html):
    
