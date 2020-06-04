@@ -22,7 +22,7 @@ __status__ = 'dev'
 	
 
     <command >
-	  $GALAXY_ROOT_DIR/tools/FROGS_moussa/app/gene_placement.py -c $categorie -i $table -t $tree_file -o $output -b $biom_file;
+	  $GALAXY_ROOT_DIR/tools/FROGS_moussa/app/gene_placement.py -c $categorie -i $table -t $tree_file -o $out_file  -b $biom_file;
 	</command> 
 
 
@@ -70,8 +70,9 @@ __status__ = 'dev'
 		<!-- <data format="nhx" name="out_file"/> -->
 		<!-- <data format="tabular" name="output_excluded" />  -->
 		<!-- <data format="html" name="summary.html" /> -->
-		<data format="html" name="html" label="${tool.name}: summary.html" from_work_dir="summary.html"/>
-		<data format="tabular" name="output" label="${tool.name}: OTU_Count.tsv" from_work_dir="OTU_Count.tsv"/> 
+		<data format="html" name="html" label="${tool.name}: summary.html" from_work_dir="summary.html"/><!-- 
+		<data format="tabular" name="out_file" label="${tool.name}:out.txt" from_work_dir="out"/> -->
+		 <data format="tabular" name="out_file" label="${tool.name}: OTU_Count.tsv" from_work_dir="OTU_Count.tsv"/> 
 
 		  
    <!--  <data format="tabular" name="output">
