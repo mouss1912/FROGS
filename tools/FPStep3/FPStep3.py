@@ -46,7 +46,7 @@ class metagenome_pipeline(Cmd):
     @see: https://github.com/picrust/picrust2/wiki
     """
     
-    def __init__(self, metagenomeMet,input_biom, function, marker, output, stdout):
+    def __init__(self, metagenomeMet,input_biom, function, marker, out_dir, stdout):
     
         Cmd.__init__(self,
                  'metagenome_pipeline.py ',
@@ -214,7 +214,6 @@ if __name__ == "__main__":
 
     group_input.add_argument('--min_samples', metavar='INT', type=int, default=1, help='Minimum number of samples that an ASV needs to be ''identfied within. ASVs below this cut-off will be ''counted as part of the \"RARE\" category in the ''stratified output (default: %(default)d).')
 
-    group_output.add_argument( '-l', '--log-file', default=sys.stdout, help='This output file will contain several information on executed commands.')
 
     #Outputs
     group_output = parser.add_argument_group( 'Outputs')
@@ -227,6 +226,7 @@ if __name__ == "__main__":
 
     group_output.add_argument('-v', '--version', default=False, action='version', version="%(prog)s " + __version__)
 
+    group_output.add_argument( '-l', '--log-file', default=sys.stdout, help='This output file will contain several information on executed commands.')
 
     args = parser.parse_args()
 
@@ -237,7 +237,7 @@ if __name__ == "__main__":
     try:     
         Logger.static_write(args.log_file, "## Application\nSoftware :" + sys.argv[0] + " (version : " + str(__version__) + ")\nCommand : " + " ".join(sys.argv) + "\n\n")
 
-       metagenome_pipeline(metagenomeMet, args.input_biom, args.function, args.marker, args.out_dir, stderr)
+        metagenome_pipeline(metagenomeMet, args.input_biom, args.function, args.marker, args.out_dir, stderr).submit( args.log_file )
     finally:
         print("Partie Finale ")
 
