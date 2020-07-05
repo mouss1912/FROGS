@@ -1,0 +1,1 @@
+python2.7 placement.py -s data/test.fasta -o out5.tree -r /Users/moussa/FROGS_moussa/tools/placement_tree/data/ref_tree_picrust2/default_files/prokaryotic/pro_ref -b test.biom1 --min_align 0.8

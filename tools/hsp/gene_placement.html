@@ -274,77 +274,100 @@
 			$(function() {
 				var detection_categories = ###DETECTION_CATEGORIES### ;
 				var detection_series = ###DETECTION_DATA### ;
-				var remove_info = ###REMOVE_DATA### ;
+				console.log(detection_series);
+				console.log(detection_categories);
 
 				// Remove alert
-				$('#js-alert').remove();
-				$('#content').removeClass("hidden");
+				// $('#js-alert').remove();
+				// $('#content').removeClass("hidden");
 				
-				// Radializes colors
-				Highcharts.setOptions({
-					 colors : ['#8EADAC', '#DE9F73'] ,
-					});
-					Highcharts.SVGRenderer.prototype.symbols.download = function (x, y, w, h) {
-					var path = [
-						// Arrow stem
-						'M', x + w * 0.5, y,
-						'L', x + w * 0.5, y + h * 0.7,
-						// Arrow head
-						'M', x + w * 0.3, y + h * 0.5,
-						'L', x + w * 0.5, y + h * 0.7,
-						'L', x + w * 0.7, y + h * 0.5,
-						// Box
-						'M', x, y + h * 0.9,
-						'L', x, y + h,
-						'L', x + w, y + h,
-						'L', x + w, y + h * 0.9
-					];
-					return path;
-				};
-				/* Radial gradient ?*/
-			    Highcharts.getOptions().colors = Highcharts.map(Highcharts.getOptions().colors, function (color) {
-			        return {
-			            radialGradient: { cx: 0.5, cy: 0.3, r: 0.7 },
-			            stops: [
-			                [0, color],
-			                [1, Highcharts.Color(color).brighten(-0.1).get('rgb')] // darken
-			            ]
-			        };
-			    });
+				// // Radializes colors
+				// Highcharts.setOptions({
+				// 	 colors : ['#8EADAC', '#DE9F73'] ,
+				// 	});
+				// 	Highcharts.SVGRenderer.prototype.symbols.download = function (x, y, w, h) {
+				// 	var path = [
+				// 		// Arrow stem
+				// 		'M', x + w * 0.5, y,
+				// 		'L', x + w * 0.5, y + h * 0.7,
+				// 		// Arrow head
+				// 		'M', x + w * 0.3, y + h * 0.5,
+				// 		'L', x + w * 0.5, y + h * 0.7,
+				// 		'L', x + w * 0.7, y + h * 0.5,
+				// 		// Box
+				// 		'M', x, y + h * 0.9,
+				// 		'L', x, y + h,
+				// 		'L', x + w, y + h,
+				// 		'L', x + w, y + h * 0.9
+				// 	];
+				// 	return path;
+				// };
+				// /* Radial gradient ?*/
+			 //    Highcharts.getOptions().colors = Highcharts.map(Highcharts.getOptions().colors, function (color) {
+			 //        return {
+			 //            radialGradient: { cx: 0.5, cy: 0.3, r: 0.7 },
+			 //            stops: [
+			 //                [0, color],
+			 //                [1, Highcharts.Color(color).brighten(-0.1).get('rgb')] // darken
+			 //            ]
+			 //        };
+			 //    });
 				
-			 	// Display chimera remove data
-				var nb_filtered_data = [
-					['Kept', remove_info['nb_kept']],
-					['Removed', remove_info['nb_removed']]
-				];
-				$('#nb-filtered').highcharts( pie_param('Clusters', nb_filtered_data, 'Clusters') );
-				var abundance_filtered_data = [
-  					['Kept', remove_info['abundance_kept']],
-  					['Removed', remove_info['abundance_removed']]
-  				];
-				$('#abundance-filtered').highcharts( pie_param('Abundance', abundance_filtered_data, 'Sequences') );
+
+			 // 	// Display chimera remove data
+				// var nb_filtered_data = [
+				// 	['Kept', remove_info['nb_kept']],
+				// 	['Removed', remove_info['nb_removed']]
+				// ];
+				// $('#nb-filtered').highcharts( pie_param('Clusters', nb_filtered_data, 'Clusters') );
+				// var abundance_filtered_data = [
+  		// 			['Kept', remove_info['abundance_kept']],
+  		// 			['Removed', remove_info['abundance_removed']]
+  		// 		];
+				// $('#abundance-filtered').highcharts( pie_param('Abundance', abundance_filtered_data, 'Sequences') );
 				
 				// Display chimera detection data
-				var table_categories = detection_categories.slice() ;
-				table_categories.unshift( "Sample" );
-				var table_series = new Array();
-				for( var spl_idx = 0 ; spl_idx < detection_series.length ; spl_idx++ ){
-					var nb_by_step = detection_series[spl_idx]['data'].slice() ;
-					nb_by_step.unshift( detection_series[spl_idx]['name'] );
-					table_series.push( nb_by_step );
-				};
-				$('#filter-log').append( table("Chimera detection by sample", table_categories, table_series) );
-				$('#filter-log table').prop( 'id', 'details-table' );
-				$('#filter-log table').DataTable({
-					dom: 	"<'#details-csv-export'><'row'<'col-sm-5'l><'col-sm-7'f>>" +
-							"<'row'<'col-sm-12'tr>>" +
-							"<'row'<'col-sm-5'i><'col-sm-7'p>>"
-				});
-				$('#details-csv-export').html( '<button class="btn"><span class="fa fa-download" aria-hidden="true"> CSV</span></button>' );
-				$('#details-csv-export').addClass( 'dataTables_filter' );
-				$('#details-csv-export').datatableExport({
-					'table_id': "details-table"
-				});
+				// var table_categories = detection_categories.slice() ;
+				// table_categories.unshift( "Sample" );
+				// var table_series = new Array();
+				// for( var spl_idx = 0 ; spl_idx < detection_series.length ; spl_idx++ ){
+				// 	var nb_by_step = detection_series[spl_idx]['data'].slice() ;
+				// 	nb_by_step.unshift( detection_series[spl_idx]['name'] );
+				// 	table_series.push( nb_by_step );
+				// };
+				chain = "<table>";
+				chain += "<thead>";
+				chain += "<tr>";
+				for(var i=0; i<detection_categories.length; i++){
+					chain += "<th>" + detection_categories[i] + "</th>";
+
+				}
+				chain += "</tr></thead>";
+				chain += "<tbody>";
+				for(var i=0; i<detection_series.length; i++){
+					chain += "<tr>";
+					for(var e=0; e< detection_series[i].length; e++){
+						chain += "<td>" + detection_series[i][e] + "</td>";
+
+					}
+					chain += "</tr>";
+				}
+				chain += "</tbody>";
+
+				$('#filter-log').html(chain);
+
+				// $('#filter-log').append( table("Chimera detection by sample", table_categories, table_series) );
+				// $('#filter-log table').prop( 'id', 'details-table' );
+				// $('#filter-log table').DataTable({
+				// 	dom: 	"<'#details-csv-export'><'row'<'col-sm-5'l><'col-sm-7'f>>" +
+				// 			"<'row'<'col-sm-12'tr>>" +
+				// 			"<'row'<'col-sm-5'i><'col-sm-7'p>>"
+				// });
+				// $('#details-csv-export').html( '<button class="btn"><span class="fa fa-download" aria-hidden="true"> CSV</span></button>' );
+				// $('#details-csv-export').addClass( 'dataTables_filter' );
+				// $('#details-csv-export').datatableExport({
+				// 	'table_id': "details-table"
+				// });
 			});
 		</script>
 	</head>
@@ -365,7 +388,7 @@
         		</div>
 			</div>
 			<div id="filter-log">
-				<h2 class="pb-2 mt-4 mb-2 border-bottom">Number copie prediction</h2>
+				<h2 class="pb-2 mt-4 mb-2 border-bottom">Number kjhkhkh copie prediction</h2>
 			</div>
 		</div>
 	</body>

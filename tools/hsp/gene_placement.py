@@ -29,7 +29,15 @@ LIB_DIR = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "lib"))
 sys.path.append(LIB_DIR) 
 if os.getenv('PYTHONPATH') is None: os.environ['PYTHONPATH'] = LIB_DIR 
 else: os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + os.pathsep + LIB_DIR
-###################
+# Default table PATH
+ITS = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "hsp/picrust2/default_files/fungi/ITS_counts.txt.gz"))
+print(ITS)
+EC = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "hsp/picrust2/default_files/fungi/ec_18S_counts.txt.gz"))
+print(EC)
+fungi_18S = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "hsp/picrust2/default_files/fungi/18S_counts.txt.gz"))
+print(fungi_18S)
+EC_18 = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "hsp/picrust2/default_files/fungi/ec_18S_counts.txt.gz"))
+print(EC_18)
 print("Partie1")
 
 #import frogs
@@ -87,6 +95,7 @@ class hspITS(Cmd):
     def __init__(self, hspITSMet,categorie, tree, output, observed_trait_table, n, stdout):
         #os.system("hsp.py "+ hsp_EC_Met  +" -i "+ str(in_trait) +" -t "+ str(tree) +" -o "+ str(output))
         #os.system("hsp.py "+ hspITSMet+ " -t "+ str(tree) +" -o "+ str(output) +" --observed_trait_table "+ str(observed) + " -n ")
+        ITS = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "hsp/picrust2/default_files/fungi/ITS_counts.txt.gz"))
 
        
         Cmd.__init__(self,
@@ -110,74 +119,153 @@ class hspITS(Cmd):
 # FUNCTIONS
 #
 ##################################################################################################################################################
-def write_summary( summary_file, output, biom_file):
+def write_summary( summary_file, results_chimera ):
     """
     @summary: Writes the summary of results.
     @param summary_file: [str] The output file.
     @param results_chimera: [str] Path to the input chimera step summary.
     """
     # Get data
-    detection_categories = ["sequence", "16S_rRNA_Count"]
-    detection_data = list()
-    remove_data = dict()
-    """
-    # Parse results chimera
-    in_remove_metrics = True
-    in_detection_metrics = False
-    section_first_line = True
-    log_fh = open(output)
-    
-    for line in log_fh:
-        line = line.strip()
-        if line.startswith('##Metrics by sample'):
-            remove_metrics = False
-            in_detection_metrics = True
-            section_first_line = True
-        elif line.startswith('##Metrics global'):
-            remove_metrics = True
-            in_detection_metrics = False
-            section_first_line = True
-        elif line == "":
-            in_detection_metrics = False
-            in_remove_metrics = False
-        else:
-            if in_detection_metrics:
-                if section_first_line:
-                    line_fields = line[1:].split("\t")[1:]
-                    detection_categories = line_fields
-                    section_first_line = False
-                else:
-                    line_fields = line.split("\t")
-                    detection_data.append({
-                             'name': line_fields[0],
-                             'data': map(int, line_fields[1:])
-                    })
-            elif in_remove_metrics:
-                if section_first_line:
-                    line_fields = line[1:].split("\t")
-                    remove_categories = [category.lower().replace(" ", "_") for category in line_fields]
-                    section_first_line = False
-                else:
-                    for idx, val in enumerate(line.split("\t")):
-                        remove_data[remove_categories[idx]] = int(val)
-    
-    log_fh.close()
-    """
-    # Write
-    FH_summary_tpl = open( os.path.join(CURRENT_DIR, "gene_placement.html") )
-    FH_summary_out = open( summary_file, "w" )
-    for line in FH_summary_tpl:
-        if "###DETECTION_CATEGORIES###" in line:
-            line = line.replace( "###DETECTION_CATEGORIES###", json.dumps(detection_categories) )
-        elif "###DETECTION_DATA###" in line:
-            line = line.replace( "###DETECTION_DATA###", json.dumps(detection_data) )
-        elif "###REMOVE_DATA###" in line:
-            line = line.replace( "###REMOVE_DATA###", json.dumps(remove_data) )
-        print(line)
-        FH_summary_out.write( line )
+    detection_categories = ["Sequence", "Otu", "NSTI"]
+    detection_data = []
+    log_fh = open(results_chimera, "r")
+    line = log_fh.readline()
 
-    FH_summary_out.close()
-    FH_summary_tpl.close()
+    for line in log_fh:
+        detection_data.append(line.strip().split("\t"))
+
+
+    #detection_categories = ["Kept nb", "Kept abundance", "Removed nb", "Removed abundance", "Abundance of the most abundant removed", "Detected nb", "Detected abundance", "Abundance of the most abundant detected"]
+    # detection_data = list()
+    # remove_data = dict()
+
+    # # Parse results chimera
+    # in_remove_metrics = True
+    # in_detection_metrics = False
+    # section_first_line = True
+    # log_fh = open(results_chimera)
+    # for line in log_fh:
+    #     line = line.strip()
+    #     if line.startswith('##Metrics by sample'):
+    #         remove_metrics = False
+    #         in_detection_metrics = True
+    #         section_first_line = True
+    #     elif line.startswith('##Metrics global'):
+    #         remove_metrics = True
+    #         in_detection_metrics = False
+    #         section_first_line = True
+    #     elif line == "":
+    #         in_detection_metrics = False
+    #         in_remove_metrics = False
+    #     else:
+    #         if in_detection_metrics:
+    #             if section_first_line:
+    #                 line_fields = line[1:].split("\t")[1:]
+    #                 detection_categories = line_fields
+    #                 section_first_line = False
+    #             else:
+    #                 line_fields = line.split("\t")
+    #                 detection_data.append({
+    #                          'name': line_fields[0],
+    #                          'data': map(int, line_fields[1:])
+    #                 })
+    #         elif in_remove_metrics:
+    #             if section_first_line:
+    #                 line_fields = line[1:].split("\t")
+    #                 remove_categories = [category.lower().replace(" ", "_") for category in line_fields]
+    #                 section_first_line = False
+    #             else:
+    #                 for idx, val in enumerate(line.split("\t")):
+    #                     remove_data[remove_categories[idx]] = int(val)
+    # log_fh.close()
+
+    # Write
+
+    # FH_summary_tpl = open( os.path.join(CURRENT_DIR, "gene_placement.html") )
+    # FH_summary_out = open( summary_file, "w" )
+    # for line in FH_summary_tpl:
+    #     if "###DETECTION_CATEGORIES###" in line:
+    #         line = line.replace( "###DETECTION_CATEGORIES###", json.dumps(detection_categories) )
+    #     elif "###DETECTION_DATA###" in line:
+    #         line = line.replace( "###DETECTION_DATA###", json.dumps(detection_data) )
+    #     elif "###LINE_NAME###" in line:
+    #         line = line.replace( "###LINE_NAME###", json.dumps(row) )
+    #     FH_summary_out.write( line )
+
+    # FH_summary_out.close()
+    # FH_summary_tpl.close()
+##################### Faire un tableau de sortie : qui sera mon output: dico de dico ######################
+#Function for create dico which contains all output_file
+#dico: keys = titre colonne, value = contenue colonne 
+def result_file(output):
+
+    file  = open(output, "r")
+    line = file.readline()
+
+    global dico
+    print("entete" +"_"+ line)
+    tab_key = line.strip().split("\t")
+    tab_col = []
+    dico_2 = {}
+    for i in tab_key:
+        if i not in dico:
+            dico[i] = []
+
+            print("Voila le tableau")
+        dico_2[i] = i
+        #print(dico)
+
+    for i in dico:
+        if i in dico_2:
+            tab_col.append(i)
+
+#print(line.split(" "))
+#print("test1")
+    print("tab col : ", len(tab_col))
+    for line in file:
+        tab = line.strip().split("\t")
+        print(line)
+        e = 0
+        for key in dico:
+            print("e :", e)
+            if e < len(tab_col) and  key == tab_col[e]:
+                if e < len(tab):
+                    dico[tab_col[e]].append(tab[e])
+                else:
+                    dico[tab_col[e]].append(":")
+                e += 1
+            else:
+                dico[key].append(":")
+
+    file.close()
+
+
+def f2(output):
+    file  = open(output, "r")
+    line = file.readline()
+
+    global dico
+    dico[output] = {}
+    print("entete" +"_"+ line)
+    tab_key = line.strip().split("\t")
+    for i in tab_key:
+        if i not in dico[output]:
+            dico[output][i] = []
+
+
+    for line in file:
+        tab = line.strip().split("\t")
+        #print(line)
+        e = 0
+        for key in tab_key:
+            dico[output][key].append(tab[e])
+            e += 1
+
+    file.close()
+
+
+
+
 ##################################################################################################################################################
 #
 # MAIN
@@ -189,13 +277,18 @@ if __name__ == "__main__":
     Categorie = ['16S', 'ITS', '18S']
     # Table to use for prediction
     TRAIT_OPTIONS = ['16S', 'COG', 'EC', 'KO', 'PFAM', 'TIGRFAM', 'PHENO']
+     # Table to use for prediction
+    FUNGI_OPTIONS = ['EC']
     # prediction method to use 
     HSP_METHODS = ['mp', 'emp_prob', 'pic', 'scp', 'subtree_average']
-    #Pour personaliser m
-    #retourne le couple de valeur: 1er indice , 2em la valeur
+
+    #return value pair : 1er = indice (i) , 2em = value (v)
     find = False
+    #c prend la chaine de caractére ajouter
+    c = ""
     for i, v in enumerate(sys.argv):
         if sys.argv[i] == "-c" or sys.argv[i] == "--categorie":
+            c = sys.argv[i+1]
             if sys.argv[i+1] == "16S":
                 find = True      
 
@@ -204,13 +297,13 @@ if __name__ == "__main__":
 
     print("partie4")
     # Inputs
-    #Les inputs categoriel
+    #Input for categorie
     group_input = parser.add_argument_group( 'Inputs' )
 
     group_input.add_argument('-c', '--categorie',choices=Categorie, help='Specifies which categorie 16S or ITS, 18S')
 
     if find:
-        group_input.add_argument('-i', '--in_trait',choices=TRAIT_OPTIONS,  help='Specifies which default trait table should be used. Use the --observed_trait_table option to input a non-default trait table.')
+        group_input.add_argument('-i', '--in_trait',  help='Specifies which default trait table should be used. Use the --observed_trait_table option to input a non-default trait table.')
 
     else:
         group_input.add_argument('-i', '--observed_trait_table', metavar='PATH', type=str, help='The input trait table describing directly observed traits (e.g. sequenced genomes) in tab-delimited format. Necessary if you want to use a custom table.')
@@ -255,13 +348,13 @@ if __name__ == "__main__":
 
     group_input.add_argument('-v', '--version', default=False, action='version', version="%(prog)s " + __version__)
 
-    group_input.add_argument('-b', '--biom_file', metavar='PATH', required=True, type=str, help='Biom file.')
+    #group_input.add_argument('-b', '--biom_file', metavar='PATH', required=True, type=str, help='Biom file.')
 
   
     # output
     group_output = parser.add_argument_group( 'Outputs' )
 
-    group_output.add_argument('-s','--html', default='summary.html', help="Path to store resulting html file. [Default: %(default)s]" )    
+    #group_output.add_argument('-s','--html', default='summary.html', help="Path to store resulting html file. [Default: %(default)s]" )    
 
     group_output.add_argument('-n', '--calculate', default=False, action='store_true', help='Calculate NSTI and add to output file.')
 
@@ -273,45 +366,136 @@ if __name__ == "__main__":
 
     print("partie5")
     args = parser.parse_args()
+    """
+    @tab_arg: table of value wich contain trait-table (EC,KO,PFAM...)
+    @ i : indice of value
+    @ v : value
+    @ note : values must be separated by commas ","
+    """
     tab_arg = []
-    if find:
+    print(tab_arg)
+    if find: 
         tab_arg = args.in_trait.split(",")
+        #tab_arg.append("16S")
     else :
         tab_arg = args.observed_trait_table.split(",")
-
+        #tab_arg.append(c)
+        #tab_arg.append("ITS")
+        #tab_arg.append("18S")
     print(tab_arg)
-    ####Declarer la sortie d'erreur ###
+    #Ajouter 16S directement 
+
+    ## Verifier le contenu de tab_arg avant de lancer ##
+    print(tab_arg)
+    for i in range(len(tab_arg)):
+        print("lllllllll")
+        print(tab_arg[i] not in TRAIT_OPTIONS)
+        print("oooooooooo")
+        print(tab_arg[i])
+        if find == True and  tab_arg[i] not in TRAIT_OPTIONS:
+            print(tab_arg[i])
+            print("You choice in " + str(TRAIT_OPTIONS))
+            exit() 
+        if find == False and tab_arg[i] not in FUNGI_OPTIONS:
+            print("You choice in " + str(FUNGI_OPTIONS))
+            exit()
+
+    ####Declare error output ###
     stderr = "hsp.stderr"
-    ### Declarer les methodes hsp ###
+    ### Declare hsp methods ###
     hsp16SMet = ""
     hspITSMet = ""
     print("partie6")
     # Process 
+    tab_files = []
     try:     
         Logger.static_write(args.log_file, "## Application\nSoftware :" + sys.argv[0] + " (version : " + str(__version__) + ")\nCommand : " + " ".join(sys.argv) + "\n\n")
         # Commands execution
-        print("partie7")
-        for i, v in enumerate(tab_arg):
+        print("partie7", tab_arg)
+        #Test = False
+        for i, v in enumerate(tab_arg+[c]):
             if args.categorie == "16S":
-                    hsp16_cmd = hsp16S(hsp16SMet ,"16S", v, args.tree, v+"_"+args.output, args.calculate, stderr).submit(args.log_file)
-            else :
-                    hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "fichier_"+str(i)+"_"+args.output, v, args.calculate, stderr).submit(args.log_file)         
-              
+                hsp16_cmd = hsp16S(hsp16SMet ,"16S", v, args.tree, "fichier_"+str(i)+"_"+args.output, args.calculate, stderr).submit(args.log_file)
+                
+            elif args.categorie == "ITS" and v == "EC": 
+                hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "fichier_"+str(i)+"_"+args.output, EC, args.calculate, stderr).submit(args.log_file) 
+
+            elif args.categorie == "ITS" : 
+                hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "fichier_"+str(i)+"_"+args.output, ITS, args.calculate, stderr).submit(args.log_file)  
+            elif args.categorie == "18" and v == "EC":
+                hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "fichier_"+str(i)+"_"+args.output, EC_18, args.calculate, stderr).submit(args.log_file)          
+            elif args.categorie == "18S":
+                hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "fichier_"+str(i)+"_"+args.output, fungi_18S, args.calculate, stderr).submit(args.log_file)  
+            
+            tab_files.append("fichier_"+str(i)+"_"+args.output)  
+
+        
+        #write_summary(args.html, args.output)
+        dico = {}
+        
+        for output in tab_files:
+            f2(output)
+
+        #print(dico)
+        #print(result_file)
+        print(tab_files)
+
+        fout = open(args.output, "w")
+
+        i = 0
+        p = list(dico[tab_files[0]].keys())[0]
+        size = len(dico[tab_files[0]][p])
+
+
+        for fi in dico:
+            fout.write("-:" + fi + ":-\n")
+            fout.write( "\t".join(list(dico[fi].keys())) + "\n" )
+
+            #print("\t".join(list(dico[fi].keys())))
+            row = 0
+            size = len(dico[fi][dico[fi].keys()[0]])
+            while row < size :
+                for col in dico[fi]:
+                    if row < len(dico[fi][col]):
+                        #print(dico[fi][col])
+                        fout.write(str(dico[fi][col][row]) + "\t")
+
+                fout.write("\n")
+
+                row += 1
+
+
+
+        fout.write("\n")
+
+        fout.close()
+        exit()
+
+        ft = open("tttt.txt", "w")
+        ft.write(str(dico))
+        ft.close()
+
+
+            #else :
+                    #hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "fichier_"+str(i)+"_"+args.output, v, args.calculate, stderr).submit(args.log_file)         
+            
     
         #hsp_16S(hsp_16_Met, args.in_trait, args.tree, args.output, args.observed_trait_table, args.calculate, stderr)
         #hsp16S(hsp16SMet, args.in_trait, args.tree,args.output,args.calculate, stderr).submit(args.log_file)
         #
-        print("partie8")
+        #print("partie8")
         #hsp_EC(hsp_EC_Met, args.tree, args.output, args.observed_trait_table, args.calculate, stderr)
 
         
         #hspITS(hspITSMet, args.tree, args.output,  args.observed_trait_table, args.calculate, stderr).submit(args.log_file)
         #hspITS(hspITSMet, args.tree, args.output,  args.observed, args.calculate, stderr)
 
-        print("partie9")    
-        write_summary(args.html, "output", args.biom_file)
+        #print("partie9")    
+        #write_summary(args.html, "output", args.biom_file)
 
+        Result_out = {args.output}
+        print(Result_out)
+        Result_out
+        
     finally:
         print("Partie Finale ")
-
-        

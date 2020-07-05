@@ -1,3 +1,6 @@
+
+Exemple test FPStep3: python2.7 FPStep3.py -i table.biom -m sortie_16S.tsv -f sortie_EC.tsv -o EC_metagenome_out
+
 A) Commande par défaut: 
 		-i TRAIT_OPTION : quelle table de comptage pré-calculée par défaut à utiliser (une parmi '16S', 'COG', 'EC', 'KO', 'PFAM', 'TIGRFAM', 'PHENO')
 		-t :arbre d'entrée newick
@@ -46,7 +49,30 @@ B) Commande avec ITS
 	Cette commande donne le nombre prévu de copies de ITS par OTU, suivi de la valeur du NSTI par OTU.
 2)  Commande utilisant (EC + n )
 	python2.7 gene_placement.py  -t out_ITS.tree -b data/ITS/ITS.biom1 -o test/out_EC_ITS.tsv.gz --observed_trait_table picrust2/default_files/fungi/ec_ITS_counts.txt.gz -n
+################################### Memo des commandes test #######################
+python2.7 gene_placement.py -c 16S -i 16S,EC -t data/out5.tree -o out_test.tsv.gz
+
+
+
 
 ################################ Commande partie 3 #######################################
 metagenome_pipeline.py -i study_seqs.biom \ -m marker_nsti_predicted.tsv.gz \-f EC_predicted.tsv.gz \-o EC_metagenome_out
+
+
+-i : study_seqs.biom
+-m : marker.gz
+-f : EC.gz
+:#Prend les deux fichiers de sortie de la 2eme étape...
+metagenome_pipeline.py -i study_seqs.biom \
+                       -m marker_nsti_predicted.tsv.gz \
+                       -f KO_predicted.tsv.gz \
+                       -o KO_metagenome_out
+
+Inférer l'abondance et la couverture des voies MetaCyc en fonction des abondances prévues du nombre d'E.C.
+
+=> En sortie on a le dossier KO_metagenome_out et EC_metagenome_out
+		=>Pour EC_metagenome_out on a:
+			1: pred_met_unistrat.gz :donne l'abondance globale des numéros EC par échantillon (colonne 1= les num EC ; et les autres col = d'autres info)
+			2: seq_norm.gz: donne la table d'abondance ASV normalisé par le nombre de copie 16S prévu (colone1 = ASV, autres col = échantillon).
+			3: weight_nsti.gz : donne la nsti moyenne par échantillon (NB: ce fichier peut etre utile pour identifier les échantillons abérants...) 
 
