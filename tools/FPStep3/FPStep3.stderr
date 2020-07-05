@@ -1,0 +1,12 @@
+0 of 147 ASVs were above the max NSTI cut-off of 2.0 and were removed.
+27 of 147 ASVs were above the max NSTI cut-off of 2.0 and were removed.
+Traceback (most recent call last):
+  File "/Users/moussa/FROGS_moussa/tools/libexec/metagenome_pipeline.py", line 122, in <module>
+    main()
+  File "/Users/moussa/FROGS_moussa/tools/libexec/metagenome_pipeline.py", line 104, in main
+    skip_norm=args.skip_norm)
+  File "/Users/moussa/FROGS_moussa/tools/lib/picrust2/metagenome_pipeline.py", line 66, in run_metagenome_pipeline
+    pred_marker)
+  File "/Users/moussa/FROGS_moussa/tools/lib/picrust2/util.py", line 372, in three_df_index_overlap_sort
+    "input files.")
+ValueError: No sequence ids overlap between all three of the input files.

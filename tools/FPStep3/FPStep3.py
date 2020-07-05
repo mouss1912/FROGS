@@ -204,7 +204,7 @@ if __name__ == "__main__":
 
     group_input.add_argument('-i', '--input_biom', metavar='PATH', required=True, type=str, help='Input table of sequence abundances (BIOM, TSV, or ''mothur shared file format).')
     
-    group_input.add_argument('-f', '--function', metavar='PATH', required=True, type=str, help='Table of predicted gene family copy numbers ''(output of hsp.py).')
+    group_input.add_argument('-f', '--function', metavar='PATH', type=str, help='Table of predicted gene family copy numbers ''(output of hsp.py).')
 
     group_input.add_argument('-m', '--marker', metavar='PATH', type=str, help='Table of predicted marker gene copy numbers ''(output of hsp.py - typically for 16S).')
 
@@ -214,6 +214,7 @@ if __name__ == "__main__":
 
     group_input.add_argument('--min_samples', metavar='INT', type=int, default=1, help='Minimum number of samples that an ASV needs to be ''identfied within. ASVs below this cut-off will be ''counted as part of the \"RARE\" category in the ''stratified output (default: %(default)d).')
 
+    group_input.add_argument('-e', '--en', metavar='PATH', required=True, type=str, help='Table of predicted gene family copy numbers ''(output of hsp.py).')
 
     #Outputs
     group_output = parser.add_argument_group( 'Outputs')
@@ -235,9 +236,51 @@ if __name__ == "__main__":
     metagenomeMet = ""
     # Process 
     try:     
+
+        file = open(args.en, "r")
+        tab_name = []
+        ind_tree = 0
+        ind_no   = 0
+        i = 0
+
+        line = file.readline()
+        while line :
+            #print("---", line[:5])
+            if len(line) and line[0] == "-":
+                #print(line[:5])
+                name_file = line.split(":")[1]
+                tab_name.append("v2_" + name_file)
+
+                file_out = open("v2_" + name_file, "w")
+
+                line = file.readline()
+                if len(line.strip().split("\t")) == 3 :
+                    ind_tree = i
+
+                if len(line.strip().split("\t")) != 3:
+                    ind_no = i
+
+                #print(line[:5])
+                while line and len(line) and line[0] != "-" :
+                    #print(line[:5])
+                    file_out.write(line)
+                    line = file.readline()
+
+                file_out.close()
+                i += 1
+
+            if len(line) and line[0] != "-" :
+                line = file.readline()
+                
+        file.close()
+        print(tab_name[ind_tree], tab_name, ind_tree, ind_no)
+
+
+
         Logger.static_write(args.log_file, "## Application\nSoftware :" + sys.argv[0] + " (version : " + str(__version__) + ")\nCommand : " + " ".join(sys.argv) + "\n\n")
 
-        metagenome_pipeline(metagenomeMet, args.input_biom, args.function, args.marker, args.out_dir, stderr).submit( args.log_file )
+        metagenome_pipeline(metagenomeMet, args.input_biom, tab_name[ind_no], tab_name[ind_tree], args.out_dir, stderr).submit( args.log_file )
+        print("okok")
     finally:
         print("Partie Finale ")
 
