@@ -14,7 +14,7 @@ import argparse
 import json
 import re
 from numpy import median
-
+from collections import OrderedDict
 #import argparse
 #from picrust2.wrap_hsp import castor_hsp_workflow
 #from picrust2.util import make_output_dir_for_file, check_files_exist
@@ -263,8 +263,45 @@ def f2(output):
 
     file.close()
 
+#### Methode de Maria
+def f3(output):
+    global dict_tsv
+    #dict_tsv = OrderedDict()
 
+    FH = open(output,"rt")
 
+    keys = FH.readline().strip().split()
+
+    for line in FH:   
+        for idx,value in enumerate(line.split()):
+            if idx == 0:
+                seq_id = value
+                if seq_id not in dict_tsv:
+                    dict_tsv[seq_id] = OrderedDict()
+            else :
+                annot = keys[idx]
+                dict_tsv[seq_id][annot] = value
+    FH.close()
+
+#########   Dico marker ###############
+def f4(output):
+    global dict_tsv1
+    #dict_tsv = OrderedDict()
+
+    FH1 = open(output,"rt")
+
+    keys = FH1.readline().strip().split()
+
+    for line in FH1:   
+        for idx,value in enumerate(line.split()):
+            if idx == 0:
+                seq_id = value
+                if seq_id not in dict_tsv1:
+                    dict_tsv1[seq_id] = OrderedDict()
+            else :
+                annot = keys[idx]
+                dict_tsv1[seq_id][annot] = value
+    FH1.close()
 
 ##################################################################################################################################################
 #
@@ -376,7 +413,7 @@ if __name__ == "__main__":
     print(tab_arg)
     if find: 
         tab_arg = args.in_trait.split(",")
-        #tab_arg.append("16S")
+        tab_arg.append("16S")
     else :
         tab_arg = args.observed_trait_table.split(",")
         #tab_arg.append(c)
@@ -407,6 +444,7 @@ if __name__ == "__main__":
     hspITSMet = ""
     print("partie6")
     # Process 
+    tab_marker = []
     tab_files = []
     try:     
         Logger.static_write(args.log_file, "## Application\nSoftware :" + sys.argv[0] + " (version : " + str(__version__) + ")\nCommand : " + " ".join(sys.argv) + "\n\n")
@@ -415,67 +453,104 @@ if __name__ == "__main__":
         #Test = False
         for i, v in enumerate(tab_arg+[c]):
             if args.categorie == "16S":
-                hsp16_cmd = hsp16S(hsp16SMet ,"16S", v, args.tree, "fichier_"+str(i)+"_"+args.output, args.calculate, stderr).submit(args.log_file)
-                
+                hsp16_cmd = hsp16S(hsp16SMet ,"16S", v, args.tree, "16S_count_table_"+str(i)+"_"+args.output, args.calculate, stderr).submit(args.log_file)
+            #Separer les deux fichier (qu on les distingue)
             elif args.categorie == "ITS" and v == "EC": 
-                hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "fichier_"+str(i)+"_"+args.output, EC, args.calculate, stderr).submit(args.log_file) 
+                 hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "reaction_count_table"+":"+args.output, EC, args.calculate, stderr).submit(args.log_file) 
 
             elif args.categorie == "ITS" : 
-                hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "fichier_"+str(i)+"_"+args.output, ITS, args.calculate, stderr).submit(args.log_file)  
+                hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "ITS_count_table"+":"+args.output, ITS, args.calculate, stderr).submit(args.log_file)  
             elif args.categorie == "18" and v == "EC":
-                hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "fichier_"+str(i)+"_"+args.output, EC_18, args.calculate, stderr).submit(args.log_file)          
+                hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "reaction_count_table_"+str(i)+"_"+args.output, EC_18, args.calculate, stderr).submit(args.log_file)          
             elif args.categorie == "18S":
-                hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "fichier_"+str(i)+"_"+args.output, fungi_18S, args.calculate, stderr).submit(args.log_file)  
-            
+                hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "18S_count_table_"+str(i)+"_"+args.output, fungi_18S, args.calculate, stderr).submit(args.log_file)  
+            #Sortir les 16S ici #tab arg prend pas la sortie 16S (modifier l'agr)
+            tab_marker.append("ITS_count_table"+":"+args.output)
             tab_files.append("fichier_"+str(i)+"_"+args.output)  
 
+        ############ Pour marker###########
+        dict_tsv1 = {}
         
-        #write_summary(args.html, args.output)
-        dico = {}
+        for output in tab_marker:
+            f4(output)
+
+
+        fout1 = open("Masorti"+args.output, "w")
+        print("test1 Markeur")
+        # for k, v in dict_tsv.items():
+        #     fout.write(str(k) + "\t" + str(v) + "\n" )
+        # fout.close()
+        header ="sequence"
+        print(dict_tsv1, "dict_tsv-------------------")
+        for seq_id in dict_tsv1:
+            print("aaaaaa#1", seq_id)
+            if header == "sequence":
+                header = header + "\t" + "\t".join(dict_tsv1[seq_id].keys()) + "\n"
+                fout1.write(header)
+                print("aaaaaa#lllll", seq_id)
+            line=seq_id
+            for annot in dict_tsv1[seq_id]:
+                line=line + "\t" + dict_tsv1[seq_id][annot]
+            fout1.write(line + "\n")  
+            print("45545#1", seq_id)
+        fout1.close()
+        exit()
+        ########## Fin marker ###################
         
-        for output in tab_files:
-            f2(output)
+        # #write_summary(args.html, args.output)
 
-        #print(dico)
-        #print(result_file)
-        print(tab_files)
-
+        # ### Methode Maria:
         fout = open(args.output, "w")
-
-        i = 0
-        p = list(dico[tab_files[0]].keys())[0]
-        size = len(dico[tab_files[0]][p])
-
-
-        for fi in dico:
-            fout.write("-:" + fi + ":-\n")
-            fout.write( "\t".join(list(dico[fi].keys())) + "\n" )
-
-            #print("\t".join(list(dico[fi].keys())))
-            row = 0
-            size = len(dico[fi][dico[fi].keys()[0]])
-            while row < size :
-                for col in dico[fi]:
-                    if row < len(dico[fi][col]):
-                        #print(dico[fi][col])
-                        fout.write(str(dico[fi][col][row]) + "\t")
-
-                fout.write("\n")
-
-                row += 1
-
-
-
-        fout.write("\n")
-
+        print("test1")
+        # for k, v in dict_tsv.items():
+        #     fout.write(str(k) + "\t" + str(v) + "\n" )
+        # fout.close()
+        header ="sequence"
+        print(dict_tsv, "dict_tsv-------------------")
+        for seq_id in dict_tsv:
+            print("aaaaaa#1", seq_id)
+            if header == "sequence":
+                header = header + "\t" + "\t".join(dict_tsv[seq_id].keys()) + "\n"
+                fout.write(header)
+                print("aaaaaa#lllll", seq_id)
+            line=seq_id
+            for annot in dict_tsv[seq_id]:
+                line=line + "\t" + dict_tsv[seq_id][annot]
+            fout.write(line + "\n")  
+            print("45545#1", seq_id)
         fout.close()
         exit()
 
-        ft = open("tttt.txt", "w")
-        ft.write(str(dico))
-        ft.close()
+        ######################################
+        # dict_tsv = {}
+        
+        # for output in tab_marker:
+        #     f4(output)
 
+        # #print(dico)
+        # #print(result_file)
+        # print(tab_marker)
 
+        # fout2 = open(args.output, "w")
+        # print("test2")
+        # # for k, v in dict_tsv.items():
+        # #     fout.write(str(k) + "\t" + str(v) + "\n" )
+        # # fout.close()
+        # header ="sequence"
+        # print(dict_tsv, "dict_tsv-------------------")
+        # for seq_id in dict_tsv:
+        #     print("aaaaaa#1", seq_id)
+        #     if header == "sequence":
+        #         header = header + "\t" + "\t".join(dict_tsv[seq_id].keys()) + "\n"
+        #         fout2.write(header)
+        #         print("aaaaaa#lllll", seq_id)
+        #     line=seq_id
+        #     for annot in dict_tsv[seq_id]:
+        #         line=line + "\t" + dict_tsv[seq_id][annot]
+        #     fout2.write(line + "\n")  
+        #     print("45545#1", seq_id)
+        # fout2.close()
+        # exit()
             #else :
                     #hspITS_cmd = hspITS(hspITSMet, args.categorie, args.tree, "fichier_"+str(i)+"_"+args.output, v, args.calculate, stderr).submit(args.log_file)         
             
@@ -493,9 +568,52 @@ if __name__ == "__main__":
         #print("partie9")    
         #write_summary(args.html, "output", args.biom_file)
 
-        Result_out = {args.output}
-        print(Result_out)
-        Result_out
+        # Result_out = {args.output}
+        # print(Result_out)
+        # Result_out
+
+        ################
+        # dict_tsv = {}
+        
+        # for output in tab_files:
+        #     f3(output)
+
+        # # #print(dico)
+        # # #print(result_file)
+        # # print(tab_files)
+
+        # # # fout = open("Mous.txt", "w")
+
+        # # # i = 0
+        # # # p = list(dico[tab_files[0]].keys())[0]
+        # # # size = len(dico[tab_files[0]][p])
+
+
+        # # # for fi in dico:
+        # # #     fout.write("-:" + fi + ":-\n")
+        # # #     fout.write( "\t".join(list(dico[fi].keys())) + "\n" )
+
+        # # #     #print("\t".join(list(dico[fi].keys())))
+        # # #     row = 0
+        # # #     size = len(dico[fi][dico[fi].keys()[0]])
+        # # #     while row < size :
+        # # #         for col in dico[fi]:
+        # # #             if row < len(dico[fi][col]):
+        # # #                 #print(dico[fi][col])
+        # # #                 fout.write(str(dico[fi][col][row]) + "\t")
+
+        # # #         fout.write("\n")
+
+        # # #         row += 1
+        # # # fout.write("\n")
+
+        # # # fout.close()
+        # # # exit()
+        # # # ### Test dico
+        # # # ft = open("tttt.txt", "w")
+        # # # ft.write(str(dico))
+        # # # ft.close()
+
         
     finally:
         print("Partie Finale ")
