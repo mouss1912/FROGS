@@ -1,0 +1,4 @@
+{"rows": [{"id": "seqCluster_1", "metadata": {"comment": "na", "seed_id": "2_212"}}], "matrix_element_type": "int", "format": "Biological Observation Matrix 1.0.0", "data": [[0, 3, 33]], "generated_by": "swarm", "matrix_type": "sparse", "shape": [147, 9], "format_url": "http://biom-format.org", "date": "2020-03-05T18:02:47", "type": "OTU table", "id": null, "columns": [{"id": "100seq_sampleA1", "metadata": null}, {"id": "100seq_sampleA2", "metadata": null}, {"id": "100seq_sampleA3", "metadata": null}, {"id": "100seq_sampleB1", "metadata": null}, {"id": "100seq_sampleB2", "metadata": null}, {"id": "100seq_sampleB3", "metadata": null}, {"id": "100seq_sampleC1", "metadata": null}, {"id": "100seq_sampleC2", "metadata": null}, {"id": "100seq_sampleC3", "metadata": null}]}
+
+
+print(df.drop(df.columns[[0, 1]], axis=1))

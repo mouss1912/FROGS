@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 # -*-coding:Utf-8 -*
 __author__ = ' Moussa Samb & Maria Bernard  & Geraldine Pascal INRAE - SIGENAE '
 __copyright__ = 'Copyright (C) 2020 INRAE'
@@ -14,7 +14,7 @@ import argparse
 import json
 import re
 from numpy import median
-
+import pandas as pd
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 # PATH: executable
@@ -46,12 +46,12 @@ class metagenome_pipeline(Cmd):
     @see: https://github.com/picrust/picrust2/wiki
     """
     
-    def __init__(self, metagenomeMet,input_biom, function, marker, out_dir, stdout):
+    def __init__(self, metagenomeMet, input_biom, marker, function, out_dir, stdout):
     
         Cmd.__init__(self,
                  'metagenome_pipeline.py ',
                  'predict abundance gene', 
-                  "" + metagenomeMet  +" -i "+ str(input_biom) +" -f "+ str(function) +" -m "+ str(marker) +" -o "+ str(out_dir) +' 2> ' + stdout,
+                  "" + metagenomeMet  +" -i "+ str(input_biom)+" -m "+ str(marker) +" -f "+ str(function)+" -o "+ str(out_dir) +' 2> ' + stdout,
                 "--version") 
       
         
@@ -62,12 +62,100 @@ class metagenome_pipeline(Cmd):
         """
 
         return Cmd.get_version(self, 'stdout').split()[1].strip() 
+"""
+_Début: 
+__author__ = 'Frederic Escudie - Plateforme bioinformatique Toulouse and Maria Bernard - Sigenae Jouy en Josas'
+__copyright__ = 'Copyright (C) 2015 INRA'
+__license__ = 'GNU General Public License'
+__version__ = '3.2'
+__email__ = 'frogs-support@inra.fr'
+__status__ = 'prod'
 
+"""
+class Biom2tsv(Cmd):
+    """
+    @summary: Converts BIOM file to TSV file.
+    @note: taxonomyRDP seedID seedSequence blastSubject blastEvalue blastLength blastPercentCoverage blastPercentIdentity blastTaxonomy OTUname SommeCount sample_count
+    """
+    def __init__( self, out_tsv, in_biom, input_fasta=None ):
+        """
+        @param in_biom: [str] Path to BIOM file.
+        @param out_tsv: [str] Path to output TSV file.
+        """
+        # Sequence file option
+        sequence_file_opt = "" if input_fasta is None else " --input-fasta " + input_fasta
+
+        # Check the metadata
+        biom = BiomIO.from_json( in_biom )
+        obs = biom.rows[0]
+        conversion_tags = ""
+        if biom.has_observation_metadata( 'comment' ) :
+            conversion_tags += "'comment' "
+        if biom.has_observation_metadata( 'rdp_taxonomy' ) and biom.has_observation_metadata( 'rdp_bootstrap' ):
+            conversion_tags += "'@rdp_tax_and_bootstrap' "
+        if biom.has_observation_metadata( 'blast_taxonomy' ):
+            conversion_tags += "'blast_taxonomy' "
+        if biom.has_observation_metadata( 'blast_affiliations' ):
+            conversion_tags += "'@blast_subject' "
+            conversion_tags += "'@blast_perc_identity' "
+            conversion_tags += "'@blast_perc_query_coverage' "
+            conversion_tags += "'@blast_evalue' "
+            conversion_tags += "'@blast_aln_length' "
+        if biom.has_observation_metadata( 'seed_id' ):
+            conversion_tags += "'seed_id' "
+        if input_fasta is not None:
+            conversion_tags += "'@seed_sequence' "
+
+        frogs_metadata = ["comment", "rdp_taxonomy", "rdp_bootstrap","blast_taxonomy","blast_affiliations","seed_id"]
+        if biom.get_observation_metadata(obs["id"]) != None:
+            for metadata in biom.get_observation_metadata(obs["id"]):
+                if metadata not in frogs_metadata : 
+                    conversion_tags += "'"+metadata+"' "
+                
+        conversion_tags += "'@observation_name' '@observation_sum' '@sample_count'"
+
+        # Set command
+        Cmd.__init__( self,
+                      'biom2tsv.py',
+                      'Converts a BIOM file in TSV file.',
+                      "--input-file " + in_biom + sequence_file_opt + " --output-file " + out_tsv + " --fields " + conversion_tags,
+                      '--version' )
+
+
+class Biom2multiAffi(Cmd):
+    """
+    @summary: Extracts multi-affiliations from a FROGS BIOM file.
+    """
+    def __init__( self, out_tsv, in_biom ):
+        """
+        @param in_biom: [str] Path to BIOM file.
+        @param out_tsv: [str] Path to output TSV file.
+        """
+        # Set command
+        Cmd.__init__( self,
+                      'multiAffiFromBiom.py',
+                      'Extracts multi-affiliations data from a FROGS BIOM file.',
+                      '--input-file ' + in_biom + ' --output-file ' + out_tsv,
+                      '--version' )
+
+"""
+_FIN: 
+__author__ = 'Frederic Escudie - Plateforme bioinformatique Toulouse and Maria Bernard - Sigenae Jouy en Josas'
+__copyright__ = 'Copyright (C) 2015 INRA'
+__license__ = 'GNU General Public License'
+__version__ = '3.2'
+__email__ = 'frogs-support@inra.fr'
+__status__ = 'prod'
+"""
 ##################################################################################################################################################
 #
 # FUNCTIONS
 #
 ##################################################################################################################################################
+"""
+_Debut: 
+__author__ PICRUST2
+"""
 def run_metagenome_pipeline(input_seqabun,
                             function,
                             max_nsti,
@@ -189,6 +277,27 @@ def check_files_exist(filepaths):
     elif num_nonexist > 1:
         raise ValueError("These input files were not found: " +
                          ", ".join(missing_files))
+"""
+_FIN: 
+__author__ PICRUST2
+"""
+# Fonction pour formater le biom
+"""
+# Recupére la sortie de Biom to tsv
+# Supprime les deux premiers colonnes (comment et seed_id) et la colone obs_sum
+# Utilise pandas
+"""
+def tsvParse(out_tsv):
+
+    tsv_parse = "out_tsv.tsv"
+    # je crée un dataframe
+    df = pd.read_csv(out_tsv, header=0, delimiter='\t')
+    # Je suprime les mauvaises colonnes
+    al = df.drop(df.columns[[0, 1, 3]], axis=1)
+    #print(df.drop(df.columns[[0, 1]], axis=1))
+    print(al)
+    # J écris dans un nouveau fichier
+    al.to_csv(tsv_parse, "\t", index=None)
 
 ##################################################################################################################################################
 #
@@ -202,7 +311,7 @@ if __name__ == "__main__":
     # Inputs
     group_input = parser.add_argument_group( 'Inputs' )
 
-    group_input.add_argument('-i', '--input_biom', metavar='PATH', required=True, type=str, help='Input table of sequence abundances (BIOM, TSV, or ''mothur shared file format).')
+    group_input.add_argument('-i', '--input_biom', required=True, help='Input table of sequence abundances (BIOM, TSV, or ''mothur shared file format).')
     
     group_input.add_argument('-f', '--function', metavar='PATH', type=str, help='Table of predicted gene family copy numbers ''(output of hsp.py).')
 
@@ -210,11 +319,17 @@ if __name__ == "__main__":
 
     group_input.add_argument('--max_nsti', metavar='FLOAT', type=float, default=2.0, help='Sequences with NSTI values above this value will ' 'be excluded (default: %(default)d).')
 
-    group_input.add_argument('--min_reads', metavar='INT', type=int, default=1, help='Minimum number of reads across all samples for ''each input ASV. ASVs below this cut-off will be ''counted as part of the \"RARE\" category in the ''stratified output (default: %(default)d).')
+    #@group_input.add_argument( '-t', '--out_tsv', default='abundance.tsv', help='This output file will contain the abundance and metadata (format: TSV). [Default: %(default)s]' )
+
+    #group_input.add_argument( '-b', '--input-biom', required=True, help="The abundance file (format: BIOM)." )
+
+    #group_input.add_argument('--min_reads', metavar='INT', type=int, default=1, help='Minimum number of reads across all samples for ''each input ASV. ASVs below this cut-off will be ''counted as part of the \"RARE\" category in the ''stratified output (default: %(default)d).')
 
     group_input.add_argument('--min_samples', metavar='INT', type=int, default=1, help='Minimum number of samples that an ASV needs to be ''identfied within. ASVs below this cut-off will be ''counted as part of the \"RARE\" category in the ''stratified output (default: %(default)d).')
 
-    group_input.add_argument('-e', '--en', metavar='PATH', required=True, type=str, help='Table of predicted gene family copy numbers ''(output of hsp.py).')
+    group_input.add_argument('-e', '--en', metavar='PATH', type=str, help='Table of predicted gene family copy numbers and markers ''(output of hsp.py).')
+
+    group_input.add_argument( '--input-fasta', help='The sequences file (format: fasta). If you use this option the sequences will be add in TSV.' )
 
     #Outputs
     group_output = parser.add_argument_group( 'Outputs')
@@ -229,58 +344,98 @@ if __name__ == "__main__":
 
     group_output.add_argument( '-l', '--log-file', default=sys.stdout, help='This output file will contain several information on executed commands.')
 
+    group_output.add_argument( '-t', '--output-tsv', default='abundance.tsv', help='This output file will contain the abundance and metadata (format: TSV). [Default: %(default)s]' )
+
     args = parser.parse_args()
+
+    prevent_shell_injections(args)
 
     stderr = "FPStep3.stderr"
 
     metagenomeMet = ""
+
+    #### Il faut changer ici : parser le fichier -f (EC, KO, PF,...) produire un autre fichier qui sera pris
+
+
+
+    ####
+
     # Process 
     try:     
+        #Faire parsing pour le nouveau : Methode Maria
 
-        file = open(args.en, "r")
-        tab_name = []
-        ind_tree = 0
-        ind_no   = 0
-        i = 0
+        # file = open(args.en, "r")
+        # tab_name = []
+        # ind_tree = 0
+        # ind_no   = 0
+        # i = 0
 
-        line = file.readline()
-        while line :
-            #print("---", line[:5])
-            if len(line) and line[0] == "-":
-                #print(line[:5])
-                name_file = line.split(":")[1]
-                tab_name.append("v2_" + name_file)
+        # line = file.readline()
 
-                file_out = open("v2_" + name_file, "w")
 
-                line = file.readline()
-                if len(line.strip().split("\t")) == 3 :
-                    ind_tree = i
 
-                if len(line.strip().split("\t")) != 3:
-                    ind_no = i
 
-                #print(line[:5])
-                while line and len(line) and line[0] != "-" :
-                    #print(line[:5])
-                    file_out.write(line)
-                    line = file.readline()
 
-                file_out.close()
-                i += 1
 
-            if len(line) and line[0] != "-" :
-                line = file.readline()
+        # #Fin parsing 
+        # #Faire parsing de mon fichier
+        # file = open(args.en, "r")
+        # tab_name = []
+        # ind_tree = 0
+        # ind_no   = 0
+        # i = 0
+
+        # line = file.readline()
+        # while line :
+        #     #print("---", line[:5])
+        #     if len(line) and line[0] == "-":
+        #         #print(line[:5])
+        #         name_file = line.split(":")[1]
+        #         tab_name.append("v2_" + name_file)
+
+        #         file_out = open("v2_" + name_file, "w")
+
+        #         line = file.readline()
+        #         if len(line.strip().split("\t")) == 3 :
+        #             ind_tree = i
+
+        #         if len(line.strip().split("\t")) != 3:
+        #             ind_no = i
+
+        #         #print(line[:5])
+        #         while line and len(line) and line[0] != "-" :
+        #             #print(line[:5])
+        #             file_out.write(line)
+        #             line = file.readline()
+
+        #         file_out.close()
+        #         i += 1
+
+        #     if len(line) and line[0] != "-" :
+        #         line = file.readline()
                 
-        file.close()
-        print(tab_name[ind_tree], tab_name, ind_tree, ind_no)
+        # file.close()
+        # print(tab_name[ind_tree], tab_name, ind_tree, ind_no)
 
-
+        #Fin parsing
 
         Logger.static_write(args.log_file, "## Application\nSoftware :" + sys.argv[0] + " (version : " + str(__version__) + ")\nCommand : " + " ".join(sys.argv) + "\n\n")
+        # Lancer Biom2tsv : transforme le biom en tsv
+        Biom2tsv( args.output_tsv, args.input_biom, args.input_fasta ).submit( args.log_file )
+        print("Biom2tsv FINI")
 
-        metagenome_pipeline(metagenomeMet, args.input_biom, tab_name[ind_no], tab_name[ind_tree], args.out_dir, stderr).submit( args.log_file )
-        print("okok")
+        # Apelle à la fonction de parse du tsv
+        tsvParse(args.output_tsv)
+        print("tsvParse FINI")
+
+        # Lancer avec le fichier reaction et le fichier marker
+        metagenome_pipeline(metagenomeMet, "out_tsv.tsv", args.marker, args.function, args.out_dir, stderr).submit( args.log_file )
+        print("metagenome_Normal FINI")
+        
+        #  Lancer avec le fichier final 
+        #metagenome_pipeline(metagenomeMet, args.input_biom, tab_name[ind_no], tab_name[ind_tree], args.out_dir, stderr).submit( args.log_file )
+        #print("metagenome_compliqué FINI")
+        #print("okok")
     finally:
         print("Partie Finale ")
 
