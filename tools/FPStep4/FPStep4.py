@@ -1,4 +1,4 @@
-#!/usr/bin/env python2.7
+#!/usr/bin/env python3
 # -*-coding:Utf-8 -*
 __author__ = ' Moussa Samb & Maria Bernard  & Geraldine Pascal INRAE - SIGENAE '
 __copyright__ = 'Copyright (C) 2020 INRAE'
@@ -31,10 +31,10 @@ from frogsUtils import *
 from frogsSequenceIO import * 
 from frogsBiom import BiomIO
 
-#import picrust2
-#from picrust2.pathway_pipeline import pathway_pipeline
-#from picrust2.util import (make_output_dir, check_files_exist,
-#                           TemporaryDirectory)
+import picrust2
+from picrust2.pathway_pipeline import pathway_pipeline
+from picrust2.util import (make_output_dir, check_files_exist,
+                          TemporaryDirectory)
 from picrust2.default import default_regroup_map, default_pathway_map
 from os import path
 ##################################################################################################################################################
@@ -58,347 +58,348 @@ class pathway_pipeline(Cmd):
                 "--version") 
       
         
-    def get_version(self):
-        """
-        @summary: Returns the program version number.
-        @return: [str] Version number if this is possible, otherwise this method return 'unknown'.
-        """
+    # def get_version(self):
+    #     """
+    #     @summary: Returns the program version number.
+    #     @return: [str] Version number if this is possible, otherwise this method return 'unknown'.
+    #     """
 
-        return Cmd.get_version(self, 'stdout').split()[1].strip() 
+    #     return Cmd.get_version(self, 'stdout').split()[1].strip() 
 
 ##################################################################################################################################################
 #
 # FUNCTIONS
 #
 ##################################################################################################################################################
-            """
+"""
             derive of picrust2 : Start
-            """
-def pathway_pipeline(inputfile,
-                     mapfile,
-                     out_dir,
-                     proc=1,
-                     run_minpath=True,
-                     coverage=False,
-                     no_regroup=False,
-                     regroup_mapfile=None,
-                     gap_fill_on=True,
-                     per_sequence_contrib=False,
-                     per_sequence_abun=None,
-                     per_sequence_function=None,
-                     wide_table=False,
-                     verbose=False):
-    '''Pipeline containing full pipeline for reading input files, making
-    calls to functions to run MinPath and calculate pathway abundances and
-    coverages. Will return: (1) unstratified pathway abundances, (2)
-    unstratified pathway coverages, (3) stratified pathway abundances, (4)
-    stratified pathway coverages, (5) pathway abundance predictions per
-    sequence, (6) pathway coverage predictions per sequence, (7) unstratified
-    pathway abundances based on per-sequence predictions. An object of class
-    None will be returned for any non-applicable value.'''
+"""
 
-    # If no regrouping flag set then set input regrouping mapfile to be None.
-    if no_regroup:
-        regroup_mapfile = None
+# def pathway_pipeline(inputfile,
+#                      mapfile,
+#                      out_dir,
+#                      proc=1,
+#                      run_minpath=True,
+#                      coverage=False,
+#                      no_regroup=False,
+#                      regroup_mapfile=None,
+#                      gap_fill_on=True,
+#                      per_sequence_contrib=False,
+#                      per_sequence_abun=None,
+#                      per_sequence_function=None,
+#                      wide_table=False,
+#                      verbose=False):
+#     '''Pipeline containing full pipeline for reading input files, making
+#     calls to functions to run MinPath and calculate pathway abundances and
+#     coverages. Will return: (1) unstratified pathway abundances, (2)
+#     unstratified pathway coverages, (3) stratified pathway abundances, (4)
+#     stratified pathway coverages, (5) pathway abundance predictions per
+#     sequence, (6) pathway coverage predictions per sequence, (7) unstratified
+#     pathway abundances based on per-sequence predictions. An object of class
+#     None will be returned for any non-applicable value.'''
 
-    # Read in table of gene family abundances and determine if in unstratified,
-    # stratified, or contribution format.
-    in_metagenome, in_format = read_metagenome_input(inputfile)
+#     # If no regrouping flag set then set input regrouping mapfile to be None.
+#     if no_regroup:
+#         regroup_mapfile = None
 
-    # Basic checks if --per_sequence_contrib set.
-    if per_sequence_contrib:
+#     # Read in table of gene family abundances and determine if in unstratified,
+#     # stratified, or contribution format.
+#     in_metagenome, in_format = read_metagenome_input(inputfile)
 
-        # Throw error if --per_sequence_contrib set, but --per_sequence_abun
-        # and/or --per_sequence_function not set.
-        if not per_sequence_abun or not per_sequence_function:
-            sys.exit("Error: \"--per_sequence_contrib\" option set, but at "
-                     "least one of \"per_sequence_abun\" or "
-                     "\"--per_sequence_function\" were not set. These input "
-                     "arguments need to be specified when "
-                     "\"--per_sequence_contrib\" is used.")
+#     # Basic checks if --per_sequence_contrib set.
+#     if per_sequence_contrib:
 
-        check_files_exist([per_sequence_abun, per_sequence_function])
+#         # Throw error if --per_sequence_contrib set, but --per_sequence_abun
+#         # and/or --per_sequence_function not set.
+#         if not per_sequence_abun or not per_sequence_function:
+#             sys.exit("Error: \"--per_sequence_contrib\" option set, but at "
+#                      "least one of \"per_sequence_abun\" or "
+#                      "\"--per_sequence_function\" were not set. These input "
+#                      "arguments need to be specified when "
+#                      "\"--per_sequence_contrib\" is used.")
 
-    # Throw error file-format and wide table setting not compatible.
-    if in_format == "strat" and not wide_table:
-        sys.exit("Error: stratified table input (deprecated format), but "
-                 "\"--wide_table\" option not set. You should input either an "
-                 "unstratified or contributional table if you do not require "
-                 "a wide-format table.")
+#         check_files_exist([per_sequence_abun, per_sequence_function])
 
-    if in_format == "contrib" and wide_table and not per_sequence_contrib:
-        sys.exit("Error: contributional table input, but \"--wide_table\" "
-                 "option set. This option specifies that deprecated "
-                 "wide-format stratified tables should be output, which "
-                 "is only allowed when a wide-format stratified table is "
-                 "input or the --per_sequence_contrib option is set.")
+#     # Throw error file-format and wide table setting not compatible.
+#     if in_format == "strat" and not wide_table:
+#         sys.exit("Error: stratified table input (deprecated format), but "
+#                  "\"--wide_table\" option not set. You should input either an "
+#                  "unstratified or contributional table if you do not require "
+#                  "a wide-format table.")
 
-    # Remove 'description' column if it exists.
-    if "description" in in_metagenome.columns:
-        in_metagenome.drop("description", axis=1, inplace=True)
+#     if in_format == "contrib" and wide_table and not per_sequence_contrib:
+#         sys.exit("Error: contributional table input, but \"--wide_table\" "
+#                  "option set. This option specifies that deprecated "
+#                  "wide-format stratified tables should be output, which "
+#                  "is only allowed when a wide-format stratified table is "
+#                  "input or the --per_sequence_contrib option is set.")
 
-    # Get list of sample ids.
-    if in_format == "contrib":
-        samples = in_metagenome['sample'].unique()
-    else:
-        samples = [col for col in in_metagenome.columns
-                   if col not in ["function", "sequence"]]
+#     # Remove 'description' column if it exists.
+#     if "description" in in_metagenome.columns:
+#         in_metagenome.drop("description", axis=1, inplace=True)
 
-    # Initialize reactions to be empty unless regroup mapfile given.
-    reactions = []
+#     # Get list of sample ids.
+#     if in_format == "contrib":
+#         samples = in_metagenome['sample'].unique()
+#     else:
+#         samples = [col for col in in_metagenome.columns
+#                    if col not in ["function", "sequence"]]
 
-    # Regroup functions in input table to different ids if regroup mapfile is
-    # provided.
-    if regroup_mapfile:
-        reactions = read_reaction_names(regroup_mapfile)
+#     # Initialize reactions to be empty unless regroup mapfile given.
+#     reactions = []
 
-        in_metagenome = regroup_func_ids(in_metagenome, in_format,
-                                         regroup_mapfile, proc)
-        regrouped_outfile = path.join(out_dir, "regrouped_infile.tsv")
-        in_metagenome.to_csv(path_or_buf=regrouped_outfile, sep="\t",
-                             index=False)
+#     # Regroup functions in input table to different ids if regroup mapfile is
+#     # provided.
+#     if regroup_mapfile:
+#         reactions = read_reaction_names(regroup_mapfile)
 
-    # Read in pathway structures.
-    pathways_in = PathwaysDatabase(database=mapfile, reaction_names=reactions)
+#         in_metagenome = regroup_func_ids(in_metagenome, in_format,
+#                                          regroup_mapfile, proc)
+#         regrouped_outfile = path.join(out_dir, "regrouped_infile.tsv")
+#         in_metagenome.to_csv(path_or_buf=regrouped_outfile, sep="\t",
+#                              index=False)
 
-    # Write out mapfile with all structure removed.
-    if run_minpath:
-        minpath_mapfile = path.join(out_dir, "parsed_mapfile.tsv")
-        with open(minpath_mapfile, "w") as out_map:
-            out_map.write(pathways_in.get_database())
-    else:
-        minpath_mapfile = None
+#     # Read in pathway structures.
+#     pathways_in = PathwaysDatabase(database=mapfile, reaction_names=reactions)
 
-    # Subset input table of reactions to only those found in pathway database.
-    in_metagenome = in_metagenome[in_metagenome.function.isin(pathways_in.reaction_list())]
+#     # Write out mapfile with all structure removed.
+#     if run_minpath:
+#         minpath_mapfile = path.join(out_dir, "parsed_mapfile.tsv")
+#         with open(minpath_mapfile, "w") as out_map:
+#             out_map.write(pathways_in.get_database())
+#     else:
+#         minpath_mapfile = None
 
-    # Initialize output objects to be None (expect for unstratified abundance).
-    path_cov_unstrat = None
-    path_cov_strat = None
-    path_abun_strat = None
-    path_cov_by_seq = None
-    path_abun_by_seq = None
-    path_abun_unstrat_by_seq = None
+#     # Subset input table of reactions to only those found in pathway database.
+#     in_metagenome = in_metagenome[in_metagenome.function.isin(pathways_in.reaction_list())]
 
-    minpath_out_dir = path.join(out_dir, "minpath_running")
-    make_output_dir(minpath_out_dir)
+#     # Initialize output objects to be None (expect for unstratified abundance).
+#     path_cov_unstrat = None
+#     path_cov_strat = None
+#     path_abun_strat = None
+#     path_cov_by_seq = None
+#     path_abun_by_seq = None
+#     path_abun_unstrat_by_seq = None
 
-    if in_format == "contrib":
-        # Get unstratified and stratified pathway levels.
-        # Note that stratified tables will only be returned by this step (and
-        # the "strat" option below) if per_sequence_contrib=False (extra step
-        # required below).
-        path_out_raw = Parallel(n_jobs=proc)(delayed(contrib_format_pathway_levels)(
-                                                     sample_id,
-                                                     in_metagenome.loc[in_metagenome['sample'] == sample_id],
-                                                     minpath_mapfile,
-                                                     minpath_out_dir,
-                                                     pathways_in,
-                                                     run_minpath,
-                                                     coverage,
-                                                     gap_fill_on,
-                                                     per_sequence_contrib,
-                                                     verbose)
-                                                     for sample_id in samples)
+#     minpath_out_dir = path.join(out_dir, "minpath_running")
+#     make_output_dir(minpath_out_dir)
 
-    elif in_format == "strat":
+#     if in_format == "contrib":
+#         # Get unstratified and stratified pathway levels.
+#         # Note that stratified tables will only be returned by this step (and
+#         # the "strat" option below) if per_sequence_contrib=False (extra step
+#         # required below).
+#         path_out_raw = Parallel(n_jobs=proc)(delayed(contrib_format_pathway_levels)(
+#                                                      sample_id,
+#                                                      in_metagenome.loc[in_metagenome['sample'] == sample_id],
+#                                                      minpath_mapfile,
+#                                                      minpath_out_dir,
+#                                                      pathways_in,
+#                                                      run_minpath,
+#                                                      coverage,
+#                                                      gap_fill_on,
+#                                                      per_sequence_contrib,
+#                                                      verbose)
+#                                                      for sample_id in samples)
 
-        path_out_raw = Parallel(n_jobs=proc)(delayed(basic_strat_pathway_levels)(
-                                                     sample_id,
-                                                     in_metagenome[["function", "sequence", sample_id]],
-                                                     minpath_mapfile,
-                                                     minpath_out_dir,
-                                                     pathways_in,
-                                                     run_minpath,
-                                                     coverage,
-                                                     gap_fill_on,
-                                                     per_sequence_contrib,
-                                                     verbose)
-                                                     for sample_id in samples)
+#     elif in_format == "strat":
 
-    # Otherwise the data is in unstratified format, which is more straight-
-    # forward to process.
-    else:
-        path_out_raw = Parallel(n_jobs=proc)(delayed(
-                                               unstrat_pathway_levels)(
-                                                   sample_id,
-                                                   in_metagenome[["function", sample_id]],
-                                                   minpath_mapfile,
-                                                   minpath_out_dir,
-                                                   pathways_in,
-                                                   run_minpath,
-                                                   coverage,
-                                                   gap_fill_on,
-                                                   verbose)
-                                               for sample_id in samples)
+#         path_out_raw = Parallel(n_jobs=proc)(delayed(basic_strat_pathway_levels)(
+#                                                      sample_id,
+#                                                      in_metagenome[["function", "sequence", sample_id]],
+#                                                      minpath_mapfile,
+#                                                      minpath_out_dir,
+#                                                      pathways_in,
+#                                                      run_minpath,
+#                                                      coverage,
+#                                                      gap_fill_on,
+#                                                      per_sequence_contrib,
+#                                                      verbose)
+#                                                      for sample_id in samples)
 
-    # Prep output unstratified DataFrames.
-    path_raw_abun_unstrat = []
-    path_raw_cov_unstrat = []
+#     # Otherwise the data is in unstratified format, which is more straight-
+#     # forward to process.
+#     else:
+#         path_out_raw = Parallel(n_jobs=proc)(delayed(
+#                                                unstrat_pathway_levels)(
+#                                                    sample_id,
+#                                                    in_metagenome[["function", sample_id]],
+#                                                    minpath_mapfile,
+#                                                    minpath_out_dir,
+#                                                    pathways_in,
+#                                                    run_minpath,
+#                                                    coverage,
+#                                                    gap_fill_on,
+#                                                    verbose)
+#                                                for sample_id in samples)
 
-    for sample_output in path_out_raw:
-        path_raw_abun_unstrat += [sample_output[0]]
-        path_raw_cov_unstrat += [sample_output[1]]
+#     # Prep output unstratified DataFrames.
+#     path_raw_abun_unstrat = []
+#     path_raw_cov_unstrat = []
 
-    path_abun_unstrat = prep_pathway_df_out(path_raw_abun_unstrat)
-    path_abun_unstrat.columns = samples
-    path_abun_unstrat.sort_index(axis=0, inplace=True)
+#     for sample_output in path_out_raw:
+#         path_raw_abun_unstrat += [sample_output[0]]
+#         path_raw_cov_unstrat += [sample_output[1]]
 
-    if coverage:
-        path_cov_unstrat = prep_pathway_df_out(path_raw_cov_unstrat,
-                                               num_digits=10)
-        path_cov_unstrat.columns = samples
-        path_cov_unstrat.sort_index(axis=0, inplace=True)
-    else:
-        path_cov_unstrat = None
+#     path_abun_unstrat = prep_pathway_df_out(path_raw_abun_unstrat)
+#     path_abun_unstrat.columns = samples
+#     path_abun_unstrat.sort_index(axis=0, inplace=True)
 
-    # If --per_sequence_contrib not set then prep output stratified
-    # table the same as the unstratified tables.
-    if not per_sequence_contrib and in_format != "unstrat":
-        path_raw_abun_strat = []
+#     if coverage:
+#         path_cov_unstrat = prep_pathway_df_out(path_raw_cov_unstrat,
+#                                                num_digits=10)
+#         path_cov_unstrat.columns = samples
+#         path_cov_unstrat.sort_index(axis=0, inplace=True)
+#     else:
+#         path_cov_unstrat = None
 
-        for sample_output in path_out_raw:
-            path_raw_abun_strat += [sample_output[2]]
+#     # If --per_sequence_contrib not set then prep output stratified
+#     # table the same as the unstratified tables.
+#     if not per_sequence_contrib and in_format != "unstrat":
+#         path_raw_abun_strat = []
 
-        if in_format == "strat":
-            path_abun_strat = prep_pathway_df_out(path_raw_abun_strat,
-                                                  strat_index=True)
-            path_abun_strat.columns = ["pathway", "sequence"] + samples
-            path_abun_strat.sort_values(['pathway', 'sequence'], inplace=True)
+#         for sample_output in path_out_raw:
+#             path_raw_abun_strat += [sample_output[2]]
 
-        elif in_format == "contrib":
-            path_abun_strat = pd.concat(path_raw_abun_strat)
-            path_abun_strat.sort_values(['sample', 'function', 'taxon'],
-                                        inplace=True)
+#         if in_format == "strat":
+#             path_abun_strat = prep_pathway_df_out(path_raw_abun_strat,
+#                                                   strat_index=True)
+#             path_abun_strat.columns = ["pathway", "sequence"] + samples
+#             path_abun_strat.sort_values(['pathway', 'sequence'], inplace=True)
 
-    # Calculate pathway levels for each individual sequence (in parallel)
-    # and then multiply this table by the abundance of each sequence
-    # within each sample (using same approach as in metagenome pipeline).
-    if per_sequence_contrib:
+#         elif in_format == "contrib":
+#             path_abun_strat = pd.concat(path_raw_abun_strat)
+#             path_abun_strat.sort_values(['sample', 'function', 'taxon'],
+#                                         inplace=True)
 
-        per_seq_out_dir = path.join(out_dir, "minpath_running_per_seq")
-        make_output_dir(per_seq_out_dir)
+#     # Calculate pathway levels for each individual sequence (in parallel)
+#     # and then multiply this table by the abundance of each sequence
+#     # within each sample (using same approach as in metagenome pipeline).
+#     if per_sequence_contrib:
 
-        path_abun_strat, \
-        path_cov_strat, \
-        path_abun_by_seq, \
-        path_cov_by_seq = per_sequence_contrib_levels(sequence_abun=per_sequence_abun,
-                                                      sequence_func=per_sequence_function,
-                                                      minpath_map=minpath_mapfile,
-                                                      per_seq_out_dir=per_seq_out_dir,
-                                                      pathway_db=pathways_in,
-                                                      run_minpath=run_minpath,
-                                                      calc_coverage=coverage,
-                                                      gap_fill_on=gap_fill_on,
-                                                      nproc=proc,
-                                                      regroup_map=regroup_mapfile,
-                                                      wide_table=wide_table,
-                                                      print_opt=verbose)
+#         per_seq_out_dir = path.join(out_dir, "minpath_running_per_seq")
+#         make_output_dir(per_seq_out_dir)
 
-        if wide_table:
-            path_abun_unstrat_by_seq = strat_to_unstrat_counts(strat_df=path_abun_strat,
-                                                               func_col="pathway")
-        else:
-            path_abun_unstrat_by_seq = contrib_to_unstrat(contrib_table=path_abun_strat,
-                                                          sample_order=list(path_abun_unstrat.columns.values))
+#         path_abun_strat, \
+#         path_cov_strat, \
+#         path_abun_by_seq, \
+#         path_cov_by_seq = per_sequence_contrib_levels(sequence_abun=per_sequence_abun,
+#                                                       sequence_func=per_sequence_function,
+#                                                       minpath_map=minpath_mapfile,
+#                                                       per_seq_out_dir=per_seq_out_dir,
+#                                                       pathway_db=pathways_in,
+#                                                       run_minpath=run_minpath,
+#                                                       calc_coverage=coverage,
+#                                                       gap_fill_on=gap_fill_on,
+#                                                       nproc=proc,
+#                                                       regroup_map=regroup_mapfile,
+#                                                       wide_table=wide_table,
+#                                                       print_opt=verbose)
 
-    return(path_abun_unstrat, path_cov_unstrat, path_abun_strat,
-           path_cov_strat, path_abun_by_seq, path_cov_by_seq,
-           path_abun_unstrat_by_seq)
+#         if wide_table:
+#             path_abun_unstrat_by_seq = strat_to_unstrat_counts(strat_df=path_abun_strat,
+#                                                                func_col="pathway")
+#         else:
+#             path_abun_unstrat_by_seq = contrib_to_unstrat(contrib_table=path_abun_strat,
+#                                                           sample_order=list(path_abun_unstrat.columns.values))
 
-def make_output_dir(dirpath, strict=False):
-    """Make an output directory if it doesn't exist
+#     return(path_abun_unstrat, path_cov_unstrat, path_abun_strat,
+#            path_cov_strat, path_abun_by_seq, path_cov_by_seq,
+#            path_abun_unstrat_by_seq)
 
-    Returns the path to the directory
-    dirpath -- a string describing the path to the directory
-    strict -- if True, raise an exception if dir already
-    exists
-    """
-    dirpath = abspath(dirpath)
+# def make_output_dir(dirpath, strict=False):
+#     """Make an output directory if it doesn't exist
 
-    # Check if directory already exists
-    if isdir(dirpath):
-        if strict:
-            err_str = "Directory '%s' already exists" % dirpath
-            raise IOError(err_str)
+#     Returns the path to the directory
+#     dirpath -- a string describing the path to the directory
+#     strict -- if True, raise an exception if dir already
+#     exists
+#     """
+#     dirpath = abspath(dirpath)
 
-        return dirpath
-    try:
-        makedirs(dirpath)
-    except IOError as e:
-        err_str = "Could not create directory '%s'. Are permissions set " +\
-                  "correctly? Got error: '%s'" %e
-        raise IOError(err_str)
+#     # Check if directory already exists
+#     if isdir(dirpath):
+#         if strict:
+#             err_str = "Directory '%s' already exists" % dirpath
+#             raise IOError(err_str)
 
-    return dirpath
+#         return dirpath
+#     try:
+#         makedirs(dirpath)
+#     except IOError as e:
+#         err_str = "Could not create directory '%s'. Are permissions set " +\
+#                   "correctly? Got error: '%s'" %e
+#         raise IOError(err_str)
 
-def check_files_exist(filepaths):
-    '''Takes in a list of filepaths and checks whether they exist. Will
-    throw error describing which files do not exist if applicable.'''
+#     return dirpath
 
-    num_nonexist = 0
+# def check_files_exist(filepaths):
+#     '''Takes in a list of filepaths and checks whether they exist. Will
+#     throw error describing which files do not exist if applicable.'''
 
-    missing_files = []
+#     num_nonexist = 0
 
-    for filepath in filepaths:
+#     missing_files = []
 
-        if not exists(filepath):
-            missing_files += [filepath]
-            num_nonexist += 1
+#     for filepath in filepaths:
 
-    if num_nonexist == 0:
-        pass
-    elif num_nonexist == 1:
-        raise ValueError("This input file was not found: " + missing_files[0])
-    elif num_nonexist > 1:
-        raise ValueError("These input files were not found: " +
-                         ", ".join(missing_files))
+#         if not exists(filepath):
+#             missing_files += [filepath]
+#             num_nonexist += 1
 
-class TemporaryDirectory(object):
-    '''Create and return a temporary directory.  This has the same
-    behavior as mkdtemp but can be used as a context manager.  For
-    example:
-        with TemporaryDirectory() as tmpdir:
-            ...
-    Upon exiting the context, the directory and everything contained
-    in it are removed.
+#     if num_nonexist == 0:
+#         pass
+#     elif num_nonexist == 1:
+#         raise ValueError("This input file was not found: " + missing_files[0])
+#     elif num_nonexist > 1:
+#         raise ValueError("These input files were not found: " +
+#                          ", ".join(missing_files))
 
-    NOTE: This function was taken and modified from the tempfile package to
-    first change permissions on folder to be deleted.'''
+# class TemporaryDirectory(object):
+#     '''Create and return a temporary directory.  This has the same
+#     behavior as mkdtemp but can be used as a context manager.  For
+#     example:
+#         with TemporaryDirectory() as tmpdir:
+#             ...
+#     Upon exiting the context, the directory and everything contained
+#     in it are removed.
 
-    def __init__(self, suffix=None, prefix=None, dir=None):
-        self.name = tempfile.mkdtemp(suffix, prefix, dir)
-        self._finalizer = _weakref.finalize(
-            self, self._cleanup, self.name,
-            warn_message="Implicitly cleaning up {!r}".format(self))
+#     NOTE: This function was taken and modified from the tempfile package to
+#     first change permissions on folder to be deleted.'''
 
-    @classmethod
-    def _cleanup(cls, name, warn_message):
-        _shutil.rmtree(name)
-        _warnings.warn(warn_message, ResourceWarning)
+#     def __init__(self, suffix=None, prefix=None, dir=None):
+#         self.name = tempfile.mkdtemp(suffix, prefix, dir)
+#         self._finalizer = _weakref.finalize(
+#             self, self._cleanup, self.name,
+#             warn_message="Implicitly cleaning up {!r}".format(self))
 
-    def __repr__(self):
-        return "<{} {!r}>".format(self.__class__.__name__, self.name)
+#     @classmethod
+#     def _cleanup(cls, name, warn_message):
+#         _shutil.rmtree(name)
+#         _warnings.warn(warn_message, ResourceWarning)
 
-    def __enter__(self):
-        return self.name
+#     def __repr__(self):
+#         return "<{} {!r}>".format(self.__class__.__name__, self.name)
 
-    def __exit__(self, exc, value, tb):
-        self.cleanup()
+#     def __enter__(self):
+#         return self.name
 
-    def cleanup(self):
-        if self._finalizer.detach():
+#     def __exit__(self, exc, value, tb):
+#         self.cleanup()
 
-            # Line added by Gavin Douglas to change permissions to 777 before
-            # deleting:
-            call(["chmod", "-R", "777", self.name])
+#     def cleanup(self):
+#         if self._finalizer.detach():
 
-            _shutil.rmtree(self.name)
+#             # Line added by Gavin Douglas to change permissions to 777 before
+#             # deleting:
+#             call(["chmod", "-R", "777", self.name])
 
-                """
+#             _shutil.rmtree(self.name)
+
+"""
                 derive of picrust2 : End
     
-                """
+"""
 
 
 ##################################################################################################################################################
@@ -413,13 +414,13 @@ if __name__ == "__main__":
     # Inputs
     group_input = parser.add_argument_group( 'Inputs' )
 
-    group_input.add_argument('-i', '--input', metavar='IN_TABLE', required=True, type=str, help='Input TSV table of gene family abundances (either ''the unstratified or stratified output of ' 'metagenome_pipeline.py).')
+    group_input.add_argument('-i', '--input_file', metavar='IN_TABLE', required=True, type=str, help='Input TSV table of gene family abundances (either ''the unstratified or stratified output of ' 'metagenome_pipeline.py).')
     
 
     #Outputs
     group_output = parser.add_argument_group( 'Outputs')
 
-    group_output.add_argument('-o', '--out_dir', metavar='DIRECTORY', required=True, type=str, help='Output folder for pathway abundance output.')
+    group_output.add_argument('-o', '--output', metavar='DIRECTORY', required=True, type=str, help='Output folder for pathway abundance output.')
 
     
 
@@ -431,7 +432,7 @@ if __name__ == "__main__":
 
     stderr = "FPStep4.stderr"
 
-    metagenomeMet = ""
+    pathwayMet = ""
     # Process 
     try:     
         Logger.static_write(args.log_file, "## Application\nSoftware :" + sys.argv[0] + " (version : " + str(__version__) + ")\nCommand : " + " ".join(sys.argv) + "\n\n")
