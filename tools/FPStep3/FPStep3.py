@@ -13,8 +13,16 @@ import sys
 import argparse
 import json
 import re
+# Pour les parse des dataframe
 from numpy import median
 import pandas as pd
+# Pour deziper
+import gzip
+# Pour les temp_directory
+from tempfile import gettempdir
+from shutil import rmtree
+
+#from get_version import get_version
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 # PATH: executable
@@ -54,14 +62,14 @@ class metagenome_pipeline(Cmd):
                   "" + metagenomeMet  +" -i "+ str(input_biom)+" -m "+ str(marker) +" -f "+ str(function)+" -o "+ str(out_dir) +' 2> ' + stdout,
                 "--version") 
       
-        
-    def get_version(self):
-        """
-        @summary: Returns the program version number.
-        @return: [str] Version number if this is possible, otherwise this method return 'unknown'.
-        """
+    # get version pose un probléme de tableau
+    # def get_version(self):
+    #     """
+    #     @summary: Returns the program version number.
+    #     @return: [str] Version number if this is possible, otherwise this method return 'unknown'.
+    #     """
 
-        return Cmd.get_version(self, 'stdout').split()[1].strip() 
+    #     return Cmd.get_version(self, 'stdout').split()[1].strip() 
 """
 _Début: 
 __author__ = 'Frederic Escudie - Plateforme bioinformatique Toulouse and Maria Bernard - Sigenae Jouy en Josas'
@@ -299,6 +307,19 @@ def tsvParse(out_tsv):
     # J écris dans un nouveau fichier
     al.to_csv(tsv_parse, "\t", index=None)
 
+##### Fonction dezip
+def dezip(file1, out_file1):
+
+    #file_zip = gzip.GzipFile("/Users/moussa/FROGS_moussa/tools/FPStep3/DonneesPourTest/pred_met1.tsv.gz", 'rb')
+    file_zip = gzip.GzipFile(file1, 'rb')
+    s = file_zip.read()
+    file_zip.close()
+
+    #file_dezip = open ("/Users/moussa/FROGS_moussa/tools/FPStep3/DonneesPourTest/pred_met1.tsv", 'wb')
+    file_dezip = open (out_file1, 'wb')
+    file_dezip.write(s)
+    file_dezip.close()
+
 ##################################################################################################################################################
 #
 # MAIN
@@ -308,6 +329,12 @@ if __name__ == "__main__":
 
     # Manage parameters
     parser = argparse.ArgumentParser( description='Phylogenetic tree reconstruction' )
+
+    parser.add_argument('--strat_out', default=False, action='store_true', help='Output table stratified by sequences as well. By ''default this will be in \"contributional\" format ''(i.e. long-format) unless the \"--wide_table\" ''option is set. The startified outfile is named ''\"metagenome_contrib.tsv.gz\" when in long-format.')
+
+    parser.add_argument('--wide_table', default=False, action='store_true', help='Output wide-format stratified table of metagenome ''predictions when \"--strat_out\" is set. This is ''the deprecated method of generating stratified ''tables since it is extremely memory intensive. The ''startified outfile is named ''\"pred_metagenome_strat.tsv.gz\" when this option ' 'is set.')
+
+    parser.add_argument('-v', '--version', default=False, action='version', version="%(prog)s " + __version__)
     # Inputs
     group_input = parser.add_argument_group( 'Inputs' )
 
@@ -334,104 +361,53 @@ if __name__ == "__main__":
     #Outputs
     group_output = parser.add_argument_group( 'Outputs')
 
-    group_output.add_argument('-o', '--out_dir', metavar='PATH', type=str, default='metagenome_out', help='Output directory for metagenome predictions. ''(default: %(default)s).')
-
-    group_output.add_argument('--strat_out', default=False, action='store_true', help='Output table stratified by sequences as well. By ''default this will be in \"contributional\" format ''(i.e. long-format) unless the \"--wide_table\" ''option is set. The startified outfile is named ''\"metagenome_contrib.tsv.gz\" when in long-format.')
-
-    group_output.add_argument('--wide_table', default=False, action='store_true', help='Output wide-format stratified table of metagenome ''predictions when \"--strat_out\" is set. This is ''the deprecated method of generating stratified ''tables since it is extremely memory intensive. The ''startified outfile is named ''\"pred_metagenome_strat.tsv.gz\" when this option ' 'is set.')
-
-    group_output.add_argument('-v', '--version', default=False, action='version', version="%(prog)s " + __version__)
+    #group_output.add_argument('-o', '--out_dir', metavar='PATH', type=str, default='metagenome_out', help='Output directory for metagenome predictions. ''(default: %(default)s).')
 
     group_output.add_argument( '-l', '--log-file', default=sys.stdout, help='This output file will contain several information on executed commands.')
 
     group_output.add_argument( '-t', '--output-tsv', default='abundance.tsv', help='This output file will contain the abundance and metadata (format: TSV). [Default: %(default)s]' )
+
+    group_output.add_argument('--function_abund', metavar='PATH', default='pred_metagenome_unstrat.tsv.gz', help='Output file for metagenome predictions abundance. ''(default: %(default)s).')
+
+    group_output.add_argument('--seqtab', default='seqtab_norm.tsv.gz', help='This output file will contain abundance normalized. ''(default: %(default)s).')
+
+    group_output.add_argument('--weighted', default='weighted_nsti.tsv.gz', help='This output file will contain the nsti value per sample (format: TSV). [Default: %(default)s]' )
 
     args = parser.parse_args()
 
     prevent_shell_injections(args)
 
     stderr = "FPStep3.stderr"
-
     metagenomeMet = ""
-
-    #### Il faut changer ici : parser le fichier -f (EC, KO, PF,...) produire un autre fichier qui sera pris
-
-
-
-    ####
-
+    ### Il faut changer ici : parser le fichier -f (EC, KO, PF,...) produire un autre fichier qui sera pris ###
     # Process 
     try:     
-        #Faire parsing pour le nouveau : Methode Maria
-
-        # file = open(args.en, "r")
-        # tab_name = []
-        # ind_tree = 0
-        # ind_no   = 0
-        # i = 0
-
-        # line = file.readline()
-
-
-
-
-
-
-        # #Fin parsing 
-        # #Faire parsing de mon fichier
-        # file = open(args.en, "r")
-        # tab_name = []
-        # ind_tree = 0
-        # ind_no   = 0
-        # i = 0
-
-        # line = file.readline()
-        # while line :
-        #     #print("---", line[:5])
-        #     if len(line) and line[0] == "-":
-        #         #print(line[:5])
-        #         name_file = line.split(":")[1]
-        #         tab_name.append("v2_" + name_file)
-
-        #         file_out = open("v2_" + name_file, "w")
-
-        #         line = file.readline()
-        #         if len(line.strip().split("\t")) == 3 :
-        #             ind_tree = i
-
-        #         if len(line.strip().split("\t")) != 3:
-        #             ind_no = i
-
-        #         #print(line[:5])
-        #         while line and len(line) and line[0] != "-" :
-        #             #print(line[:5])
-        #             file_out.write(line)
-        #             line = file.readline()
-
-        #         file_out.close()
-        #         i += 1
-
-        #     if len(line) and line[0] != "-" :
-        #         line = file.readline()
-                
-        # file.close()
-        # print(tab_name[ind_tree], tab_name, ind_tree, ind_no)
-
-        #Fin parsing
-
         Logger.static_write(args.log_file, "## Application\nSoftware :" + sys.argv[0] + " (version : " + str(__version__) + ")\nCommand : " + " ".join(sys.argv) + "\n\n")
         # Lancer Biom2tsv : transforme le biom en tsv
         Biom2tsv( args.output_tsv, args.input_biom, args.input_fasta ).submit( args.log_file )
         print("Biom2tsv FINI")
-
         # Apelle à la fonction de parse du tsv
         tsvParse(args.output_tsv)
         print("tsvParse FINI")
 
+        ########### Création de chemin #############
+        #out_dir = 
+        out_dir = os.path.abspath(os.path.dirname(args.function_abund)) + "/" +str(time.time()) + "_" + str(os.getpid())
         # Lancer avec le fichier reaction et le fichier marker
-        metagenome_pipeline(metagenomeMet, "out_tsv.tsv", args.marker, args.function, args.out_dir, stderr).submit( args.log_file )
+        metagenome_pipeline(metagenomeMet, "out_tsv.tsv", args.marker, args.function, out_dir, stderr).submit( args.log_file )
         print("metagenome_Normal FINI")
-        
+        ###### 
+        os.system("mv " + out_dir +"/"+ "pred_metagenome_unstrat.tsv.gz " + args.function_abund)
+
+        dezip(args.function_abund, "pred_met1.tsv")
+
+        os.system("mv " + out_dir +"/" + "seqtab_norm.tsv.gz " + args.seqtab)
+        dezip(args.seqtab, "seqtab1.tsv")
+   
+        os.system("mv " + out_dir +"/" + "weighted_nsti.tsv.gz " + args.weighted)
+        dezip(args.weighted, "weight1.tsv")
+
+        os.system("rm -rf " + out_dir)
         #  Lancer avec le fichier final 
         #metagenome_pipeline(metagenomeMet, args.input_biom, tab_name[ind_no], tab_name[ind_tree], args.out_dir, stderr).submit( args.log_file )
         #print("metagenome_compliqué FINI")
