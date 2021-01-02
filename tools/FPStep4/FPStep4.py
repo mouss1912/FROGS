@@ -14,7 +14,8 @@ import argparse
 import json
 import re
 from numpy import median
-
+import gzip
+import pandas as pd
 
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
 # PATH: executable
@@ -25,16 +26,14 @@ LIB_DIR = os.path.abspath(os.path.join(os.path.dirname(CURRENT_DIR), "lib"))
 sys.path.append(LIB_DIR) 
 if os.getenv('PYTHONPATH') is None: os.environ['PYTHONPATH'] = LIB_DIR 
 else: os.environ['PYTHONPATH'] = os.environ['PYTHONPATH'] + os.pathsep + LIB_DIR
-
 #import frogs
 from frogsUtils import *
 from frogsSequenceIO import * 
 from frogsBiom import BiomIO
-
-import picrust2
+# import picrust2
 from picrust2.pathway_pipeline import pathway_pipeline
 from picrust2.util import (make_output_dir, check_files_exist,
-                          TemporaryDirectory)
+                           TemporaryDirectory)
 from picrust2.default import default_regroup_map, default_pathway_map
 from os import path
 ##################################################################################################################################################
@@ -58,13 +57,13 @@ class pathway_pipeline(Cmd):
                 "--version") 
       
         
-    # def get_version(self):
+     def get_version(self):
     #     """
     #     @summary: Returns the program version number.
     #     @return: [str] Version number if this is possible, otherwise this method return 'unknown'.
     #     """
 
-    #     return Cmd.get_version(self, 'stdout').split()[1].strip() 
+        return Cmd.get_version(self, 'stdout').split()[1].strip() 
 
 ##################################################################################################################################################
 #
@@ -400,7 +399,18 @@ class pathway_pipeline(Cmd):
                 derive of picrust2 : End
     
 """
+# Fonction pour dézipper les fichiers .gz
+def dezip(file1, out_file1):
 
+    #file_zip = gzip.GzipFile("/Users/moussa/FROGS_moussa/tools/FPStep3/DonneesPourTest/pred_met1.tsv.gz", 'rb')
+    file_zip = gzip.GzipFile(file1, 'rb')
+    s = file_zip.read()
+    file_zip.close()
+
+    #file_dezip = open ("/Users/moussa/FROGS_moussa/tools/FPStep3/DonneesPourTest/pred_met1.tsv", 'wb')
+    file_dezip = open (out_file1, 'wb')
+    file_dezip.write(s)
+    file_dezip.close()
 
 ##################################################################################################################################################
 #
@@ -420,10 +430,10 @@ if __name__ == "__main__":
     #Outputs
     group_output = parser.add_argument_group( 'Outputs')
 
-    group_output.add_argument('-o', '--output', metavar='DIRECTORY', required=True, type=str, help='Output folder for pathway abundance output.')
+    #group_output.add_argument('-o', '--output', metavar='DIRECTORY', required=True, type=str, help='Output folder for pathway abundance output.')
 
+    group_output.add_argument('--path_abund', metavar='PATH', default='path_abun_unstrat.tsv.gz', help='Output file for metagenome predictions abundance. ''(default: %(default)s).')
     
-
     group_output.add_argument('-v', '--version', default=False, action='version', version="%(prog)s " + __version__)
 
     group_output.add_argument( '-l', '--log-file', default=sys.stdout, help='This output file will contain several information on executed commands.')
@@ -436,7 +446,14 @@ if __name__ == "__main__":
     # Process 
     try:     
         Logger.static_write(args.log_file, "## Application\nSoftware :" + sys.argv[0] + " (version : " + str(__version__) + ")\nCommand : " + " ".join(sys.argv) + "\n\n")
-        pathway_pipeline(pathwayMet, args.input_file, args.output, stderr).submit(args.log_file)
+         ########### Création de chemin ############# 
+        output = os.path.abspath(os.path.dirname(args.path_abund)) + "/" +str(time.time()) + "_" + str(os.getpid())
+        ###### Lancer commande #####
+        pathway_pipeline(pathwayMet, args.input_file, output, stderr).submit(args.log_file)
+        ####### Mettre le fichier dans le nouveau dossier (de l'argument path_abund)
+        os.system("mv " + output +"/"+ "path_abun_unstrat.tsv.gz " + args.path_abund)
+        # Dezip la sortie zipper
+        dezip(args.path_abund, "path_abun_unstrat.tsv")
     finally:
         print("Partie Finale ")
 
